@@ -12,8 +12,6 @@ import java.util.Arrays;
 public class DataInitializer implements CommandLineRunner {
 
     private final PropertyRepository repo;
-
-    // 🔴 UPDATE IF YOUR BACKEND URL IS DIFFERENT
     private static final String BASE_URL = "https://ogm-backend-clean.onrender.com";
 
     public DataInitializer(PropertyRepository repo) {
