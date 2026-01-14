@@ -2,6 +2,7 @@ package com.ogm.market.util;
 
 import com.ogm.market.dto.PropertyResponse;
 import com.ogm.market.model.Property;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,13 @@ public class PropertyMapper {
     private String storageBaseUrl;
 
     public PropertyResponse toResponse(Property p) {
+
+        // ✅ FORCE INITIALIZATION of lazy collections
+        Hibernate.initialize(p.getImages());
+        Hibernate.initialize(p.getMainImages());
+        Hibernate.initialize(p.getAmenities());
+        Hibernate.initialize(p.getNearby());
+
         return PropertyResponse.builder()
                 .id(p.getId())
                 .title(p.getTitle())
@@ -25,10 +33,8 @@ public class PropertyMapper {
                 .bedrooms(p.getBedrooms())
                 .bathrooms(p.getBathrooms())
 
-                // ✅ DESCRIPTION (THIS WAS MISSING)
                 .description(p.getDescription())
 
-                // 🔥 Images with prefix
                 .image(prefix(p.getImage()))
 
                 .images(p.getImages() == null ? null :
@@ -52,8 +58,7 @@ public class PropertyMapper {
                 .reraApproved(p.isReraApproved())
                 .soldOut(p.isSoldOut())
 
-                .videoUrl(p.getVideoUrl())
-
+                .videoUrl(prefix(p.getVideoUrl()))
                 .build();
     }
 

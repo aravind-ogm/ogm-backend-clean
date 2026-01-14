@@ -7,6 +7,7 @@ import com.ogm.market.util.PropertyMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AISearchServiceImpl implements AISearchService {
@@ -21,6 +22,7 @@ public class AISearchServiceImpl implements AISearchService {
     }
 
     @Override
+    @Transactional(readOnly = true)   // ✅ THIS IS THE KEY FIX
     public Page<PropertyResponse> search(String prompt, Pageable pageable) {
 
         if (prompt == null || prompt.isBlank()) {

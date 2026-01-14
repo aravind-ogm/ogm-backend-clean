@@ -3,12 +3,11 @@ package com.ogm.market.service;
 import com.ogm.market.model.ContactForm;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.core.io.ClassPathResource;
-
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +21,14 @@ public class EmailService {
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
+    }
+
+    public void sendOtp(String email, String otp) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(email);
+        msg.setSubject("OGM Login OTP");
+        msg.setText("Your OTP is " + otp + ". Valid for 5 minutes.");
+        mailSender.send(msg);
     }
 
     public void sendContactEmail(ContactForm form) throws MessagingException {

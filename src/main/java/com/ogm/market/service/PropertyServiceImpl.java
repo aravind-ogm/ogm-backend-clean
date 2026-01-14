@@ -5,13 +5,13 @@ import com.ogm.market.dto.PropertyResponse;
 import com.ogm.market.exception.ResourceNotFoundException;
 import com.ogm.market.model.Property;
 import com.ogm.market.repository.PropertyRepository;
+import org.hibernate.Hibernate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PropertyServiceImpl implements PropertyService {
@@ -19,14 +19,17 @@ public class PropertyServiceImpl implements PropertyService {
     private final PropertyRepository repository;
     private final String storageBaseUrl;
 
-    public PropertyServiceImpl(PropertyRepository repository,
-                               @Value("${storage.base-url:}") String storageBaseUrl) {
+    public PropertyServiceImpl(
+            PropertyRepository repository,
+            @Value("${storage.base-url:}") String storageBaseUrl
+    ) {
         this.repository = repository;
         this.storageBaseUrl = storageBaseUrl;
     }
 
-    // ----------- ADVANCED SEARCH IMPLEMENTATION ----------
+    // ================= ADVANCED SEARCH =================
     @Override
+    @Transactional(readOnly = true)
     public Page<PropertyResponse> listProperties(
             String q,
             String type,
@@ -40,7 +43,7 @@ public class PropertyServiceImpl implements PropertyService {
             String furnishing,
             Pageable pageable
     ) {
-        Page<Property> page = repository.advancedSearch(
+        return repository.advancedSearch(
                 q == null ? null : q.toLowerCase(),
                 type,
                 minPrice,
@@ -52,21 +55,23 @@ public class PropertyServiceImpl implements PropertyService {
                 facing,
                 furnishing,
                 pageable
-        );
-
-        return page.map(this::toResponse);
+        ).map(this::toResponse);
     }
 
-    // ----------- GET BY ID ----------
+    // ================= GET BY ID =================
     @Override
+    @Transactional(readOnly = true)
     public PropertyResponse getProperty(Long id) {
         Property p = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Property not found: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Property not found: " + id)
+                );
         return toResponse(p);
     }
 
-    // ----------- CREATE ----------
+    // ================= CREATE =================
     @Override
+    @Transactional
     public PropertyResponse createProperty(PropertyRequest request) {
         Property p = new Property();
         BeanUtils.copyProperties(request, p);
@@ -74,35 +79,33 @@ public class PropertyServiceImpl implements PropertyService {
         if (request.getImages() != null) p.setImages(request.getImages());
         if (request.getMainImages() != null) p.setMainImages(request.getMainImages());
         if (request.getAmenities() != null) p.setAmenities(request.getAmenities());
-
-        // ⭐ NEW — Nearby Highlights
         if (request.getNearby() != null) p.setNearby(request.getNearby());
 
-        Property saved = repository.save(p);
-        return toResponse(saved);
+        return toResponse(repository.save(p));
     }
 
-    // ----------- UPDATE ----------
+    // ================= UPDATE =================
     @Override
+    @Transactional
     public PropertyResponse updateProperty(Long id, PropertyRequest request) {
         Property existing = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Property not found: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Property not found: " + id)
+                );
 
         BeanUtils.copyProperties(request, existing, "id");
 
         if (request.getImages() != null) existing.setImages(request.getImages());
         if (request.getMainImages() != null) existing.setMainImages(request.getMainImages());
         if (request.getAmenities() != null) existing.setAmenities(request.getAmenities());
-
-        // ⭐ NEW — Nearby Highlights
         if (request.getNearby() != null) existing.setNearby(request.getNearby());
 
-        Property saved = repository.save(existing);
-        return toResponse(saved);
+        return toResponse(repository.save(existing));
     }
 
-    // ----------- DELETE ----------
+    // ================= DELETE =================
     @Override
+    @Transactional
     public void deleteProperty(Long id) {
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Property not found: " + id);
@@ -110,8 +113,14 @@ public class PropertyServiceImpl implements PropertyService {
         repository.deleteById(id);
     }
 
-    // ----------- MAPPER ----------
+    // ================= DTO MAPPER =================
     private PropertyResponse toResponse(Property p) {
+
+        // ✅ FORCE initialization INSIDE transaction
+        Hibernate.initialize(p.getAmenities());
+        Hibernate.initialize(p.getMainImages());
+        Hibernate.initialize(p.getImages());
+        Hibernate.initialize(p.getNearby());
 
         return PropertyResponse.builder()
                 .id(p.getId())
@@ -125,12 +134,17 @@ public class PropertyServiceImpl implements PropertyService {
                 .soldOut(p.isSoldOut())
 
                 .mainImages(p.getMainImages() == null ? null :
-                        p.getMainImages().stream().map(this::prefix).collect(Collectors.toList()))
-
-                .amenities(p.getAmenities())
+                        p.getMainImages().stream()
+                                .map(this::prefix)
+                                .toList())
 
                 .images(p.getImages() == null ? null :
-                        p.getImages().stream().map(this::prefix).collect(Collectors.toList()))
+                        p.getImages().stream()
+                                .map(this::prefix)
+                                .toList())
+
+                .amenities(p.getAmenities())
+                .nearby(p.getNearby())
 
                 .bedrooms(p.getBedrooms())
                 .bathrooms(p.getBathrooms())
@@ -142,23 +156,17 @@ public class PropertyServiceImpl implements PropertyService {
                 .furnishing(p.getFurnishing())
                 .description(p.getDescription())
                 .videoUrl(prefix(p.getVideoUrl()))
-                // ⭐ NEW — include Nearby Highlights in response
-                .nearby(p.getNearby())
-
-
                 .build();
     }
 
-    // ----------- URL PREFIX ----------
+
+    // ================= URL PREFIX =================
     private String prefix(String url) {
         if (url == null) return null;
         if (url.startsWith("http")) return url;
-
-        if (storageBaseUrl == null || storageBaseUrl.isBlank()) {
-            return url;
-        }
-
+        if (storageBaseUrl == null || storageBaseUrl.isBlank()) return url;
         return url.startsWith("/") ?
-                storageBaseUrl + url : storageBaseUrl + "/" + url;
+                storageBaseUrl + url :
+                storageBaseUrl + "/" + url;
     }
 }
