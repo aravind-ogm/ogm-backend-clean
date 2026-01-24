@@ -250,7 +250,7 @@ public class DataInitializer implements CommandLineRunner {
 // ------------------------- PROPERTY 5 -------------------------
 
         Property p5 = Property.builder()
-                .title("Dummy2 – Electronic City")
+                .title(" 3 BHK Electronic City")
                 .location("Ajmera Silicon Valley, Electronic City Phase 1")
                 .price("₹42 Lakhs")
                 .type("Studio")
