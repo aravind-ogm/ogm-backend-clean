@@ -31,7 +31,7 @@ public class AIChatController {
     private final ObjectMapper mapper = new ObjectMapper();
 
     // ⛔ NEVER hardcode this – use env / application.yml
-    @Value("${openai.api.key}")
+//    @Value("${openai.api.key}")
     private String openAiApiKey;
 
     public AIChatController(PropertyRepository propertyRepository) {
