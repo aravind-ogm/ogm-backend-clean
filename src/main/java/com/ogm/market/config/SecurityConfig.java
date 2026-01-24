@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 public class SecurityConfig {
@@ -15,20 +16,33 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                /* ✅ Disable CSRF using new API */
+                /* Disable CSRF */
                 .csrf(csrf -> csrf.disable())
 
-                /* ✅ CORS (optional but recommended) */
+                /* Enable CORS */
                 .cors(Customizer.withDefaults())
 
-                /* ✅ Authorization rules */
+                /* Authorization */
                 .authorizeHttpRequests(auth -> auth
+
+                        /* ✅ PUBLIC STATIC RESOURCES (THIS FIXES 403 IMAGES) */
+                        .requestMatchers(
+                                new AntPathRequestMatcher("/images/**"),
+                                new AntPathRequestMatcher("/videos/**"),
+                                new AntPathRequestMatcher("/brochures/**"),
+                                new AntPathRequestMatcher("/favicon.ico"),
+                                new AntPathRequestMatcher("/logo.png")
+                        ).permitAll()
+
+                        /* ✅ PUBLIC APIs */
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/properties/**",
                                 "/api/ai/**",
                                 "/"
                         ).permitAll()
+
+                        /* 🔒 Everything else requires auth */
                         .anyRequest().authenticated()
                 );
 
