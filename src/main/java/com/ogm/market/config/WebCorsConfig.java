@@ -16,16 +16,16 @@ public class WebCorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-            "https://oneglobalmarketplace.com",
-            "https://www.oneglobalmarketplace.com"
+                "https://oneglobalmarketplace.com",
+                "https://www.oneglobalmarketplace.com"
         ));
 
         config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false);
+        config.setAllowCredentials(false); // IMPORTANT
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
