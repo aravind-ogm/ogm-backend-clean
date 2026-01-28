@@ -256,20 +256,17 @@ public class DataInitializer implements CommandLineRunner {
                 .type("Studio")
                 .sqft("620")
                 .reraApproved(false)
-                .image(BASE_URL + "/images/p5/property-05-main-01.jpg")
+                .image(BASE_URL + "/images/p5/property-05-main-01.png")
                 .mainImages(Arrays.asList(
-                        BASE_URL + "/images/p5/property-05-main-01.jpg",
-                        BASE_URL + "/images/p5/property-05-main-01.jpg"
+                        BASE_URL + "/images/p5/property-05-main-01.png",
+                        BASE_URL + "/images/p5/property-05-main-01.png"
                 ))
                 .images(Arrays.asList(
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg",
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg",
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg",
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg",
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg",
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg",
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg",
-                        BASE_URL + "/images/p5/property-05-gallery-01.jpg"
+                        BASE_URL + "/images/p5/property-05-gallery-01.png",
+                        BASE_URL + "/images/p5/property-05-gallery-02.png",
+                        BASE_URL + "/images/p5/property-05-gallery-03.png",
+                        BASE_URL + "/images/p5/property-05-gallery-04.png",
+                        BASE_URL + "/images/p5/property-05-gallery-05.png"
                 ))
                 .bedrooms(1)
                 .bathrooms(1)
@@ -307,20 +304,16 @@ public class DataInitializer implements CommandLineRunner {
                 .type("Penthouse")
                 .sqft("5200")
                 .reraApproved(true)
-                .image(BASE_URL + "/images/p6/property-06-main-01.jpg")
+                .image(BASE_URL + "/images/p6/property-06-main-01.jpeg")
                 .mainImages(Arrays.asList(
-                        BASE_URL + "/images/p6/property-06-main-01.jpg",
-                        BASE_URL + "/images/p6/property-06-main-01.jpg"
+                        BASE_URL + "/images/p6/property-06-main-01.jpeg",
+                        BASE_URL + "/images/p6/property-06-main-01.jpeg"
                 ))
                 .images(Arrays.asList(
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg",
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg",
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg",
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg",
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg",
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg",
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg",
-                        BASE_URL + "/images/p6/property-06-gallery-01.jpg"
+                        BASE_URL + "/images/p6/property-06-gallery-01.jpeg",
+                        BASE_URL + "/images/p6/property-06-gallery-02.jpeg",
+                        BASE_URL + "/images/p6/property-06-gallery-03.jpeg",
+                        BASE_URL + "/images/p6/property-06-gallery-04.jpeg"
                 ))
                 .bedrooms(5)
                 .bathrooms(6)
@@ -356,20 +349,23 @@ public class DataInitializer implements CommandLineRunner {
                 .type("Apartment")
                 .sqft("1760")
                 .reraApproved(false)
-                .image(BASE_URL + "/images/p7/property-07-main-01.jpg")
+                .image(BASE_URL + "/images/p7/property-07-main-01.jpeg")
                 .mainImages(Arrays.asList(
-                        BASE_URL + "/images/p7/property-07-main-01.jpg",
-                        BASE_URL + "/images/p7/property-07-main-01.jpg"
+                        BASE_URL + "/images/p7/property-07-main-01.jpeg",
+                        BASE_URL + "/images/p7/property-07-main-01.jpeg"
                 ))
                 .images(Arrays.asList(
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg",
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg",
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg",
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg",
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg",
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg",
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg",
-                        BASE_URL + "/images/p7/property-07-gallery-01.jpg"
+                        BASE_URL + "/images/p7/property-07-gallery-01.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-02.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-03.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-04.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-05.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-06.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-07.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-08.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-09.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-10.jpeg",
+                        BASE_URL + "/images/p7/property-07-gallery-11.jpeg"
                 ))
                 .bedrooms(3)
                 .bathrooms(3)
