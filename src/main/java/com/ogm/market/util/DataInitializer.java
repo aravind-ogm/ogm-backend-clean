@@ -331,7 +331,7 @@ public class DataInitializer implements CommandLineRunner {
                 .furnishing("Fully Furnished")
                 .facing("North-East")
                 .description("An ultra-luxurious penthouse with an open deck, skyline views, infinity jacuzzi, and German modular kitchen.")
-                .videoUrl(BASE_URL + "/videos/penthouse_tour.mp4")
+                .videoUrl(BASE_URL + "/videos/plot_6.mov")
                 .amenities(Arrays.asList(
                         "3-Phase Power Backup",
                         "24x7 Water Supply",
@@ -380,7 +380,7 @@ public class DataInitializer implements CommandLineRunner {
                 .furnishing("Unfurnished")
                 .facing("West")
                 .description("Strategically located 3BHK apartment with clubhouse, swimming pool, kids play area, and 24/7 security.")
-                .videoUrl(BASE_URL + "/videos/apartment_tour.mp4")
+                .videoUrl(BASE_URL + "/videos/apartment_tour_7.mp4")
                 .amenities(Arrays.asList(
                         "3-Phase Power Backup",
                         "24x7 Water Supply",
