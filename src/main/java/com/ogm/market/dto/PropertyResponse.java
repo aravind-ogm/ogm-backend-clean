@@ -26,10 +26,11 @@ public class PropertyResponse {
 
     private List<String> images;
 
-    private Integer bedrooms;
-    private Integer bathrooms;
+    private String bedrooms;
+    private String bathrooms;
 
     private String carpetArea;
+    private String landArea;
     private String builtupArea;
     private String parking;
     private String maintenance;

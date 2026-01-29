@@ -13,6 +13,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final PropertyRepository repo;
     private static final String BASE_URL = "https://ogm-backend-clean-879813720468.asia-south1.run.app";
+//    private static final String BASE_URL = "http://localhost:8080";
 
     public DataInitializer(PropertyRepository repo) {
         this.repo = repo;
@@ -28,34 +29,46 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p1 = Property.builder()
                 .title("Singapore Style 4 BHK Villa in Gattahalli")
-                .location("Astro Green Cascade, Gattahalli, Bengaluru")
-                .price("₹7 Cr")
-                .type("Residential Building")
+                .location("Astro GreenCascade, Gattahalli, Bengaluru")
+                .price("₹ 6.32 Cr")
+                .type("Residential Villa")
                 .sqft("4300")
                 .reraApproved(true)
-                .brochureFile("property-1.pdf")
+                .brochureFile("Astro Green Cascade - Life style Experience Brochure.pdf")
                 .image(BASE_URL + "/images/p1/property-01-main-01.jpg")
                 .mainImages(Arrays.asList(
                         BASE_URL + "/images/p1/property-01-main-01.jpg",
                         BASE_URL + "/images/p1/property-01-main-01.jpg"
                 ))
                 .images(Arrays.asList(
-                        BASE_URL + "/images/p1/property-01-gallery-01.jpg",
-                        BASE_URL + "/images/p1/property-01-gallery-02.jpg",
-                        BASE_URL + "/images/p1/property-01-gallery-03.jpg",
-                        BASE_URL + "/images/p1/property-01-gallery-04.jpg",
-                        BASE_URL + "/images/p1/property-01-gallery-05.jpg",
-                        BASE_URL + "/images/p1/property-01-gallery-06.jpg",
-                        BASE_URL + "/images/p1/property-01-gallery-07.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-01.png",
+                        BASE_URL + "/images/p1/property-01-gallery-02.png",
+                        BASE_URL + "/images/p1/property-01-gallery-03.png",
+                        BASE_URL + "/images/p1/property-01-gallery-04.png",
+                        BASE_URL + "/images/p1/property-01-gallery-05.png",
+                        BASE_URL + "/images/p1/property-01-gallery-06.png",
+                        BASE_URL + "/images/p1/property-01-gallery-07.png",
                         BASE_URL + "/images/p1/property-01-gallery-08.jpg",
-                        BASE_URL + "/images/p1/property-01-gallery-09.jpg"
+                        BASE_URL + "/images/p1/property-01-gallery-09.png",
+                        BASE_URL + "/images/p1/property-01-gallery-10.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-11.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-12.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-13.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-14.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-15.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-16.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-17.jpg",
+                        BASE_URL + "/images/p1/property-01-gallery-18.jpg"
                 ))
-                .carpetArea("2400 sq.ft")
+                .landArea("2400 sq.ft - ")
+                .maintenance("N/A")
+                .bedrooms("4 -")
+                .bathrooms("4 -")
                 .builtupArea("4300 sq.ft")
                 .parking("3 Cars")
-                .furnishing("Un-furnished")
+                .furnishing("Unfurnished")
                 .facing("East")
-                .description("This villa blends modern luxury with natural serenity, featuring sunlit interiors, landscaped pockets and a seamless flow of spaces across all three levels. Each floor is thoughtfully designed—from a warm, open ground level to a private, lounge-style first floor and a retreat-like second floor with a media room and terrace. With its lift, elegant staircase and well-crafted rooms, the home offers a calm, elevated living experience that feels both refined and effortlessly inviting.")
+                .description("A home with walls is just a home, but a home full of life and experience is a castle. Project Chief represents character; it gives a breathtaking luxury life with a uniquely styled exterior build and interior mastery of class. With 14mm-thick laminated glass doors covering the outer walls, in continuation with the foldable windows beneath them, it’s a place wrapped in glass of class. From clay cladding walls to Italian marble floors and an extravagant staircase, it has the true personality of a king and the heart of a queen.")
                 .videoUrl(BASE_URL + "/images/p1/property-01-video-01.mp4")
                 .amenities(Arrays.asList(
                         "Car Parking (2 car parking slots)",
@@ -74,22 +87,22 @@ public class DataInitializer implements CommandLineRunner {
                 ))
                 .nearby(Arrays.asList(
                         new NearbyLocation(
-                                "Swimming Pool",
-                                "3.4 km",
-                                "Pool",
-                                "https://images.pexels.com/photos/261039/pexels-photo-261039.jpeg"
+                                "Play Arena",
+                                "4.8 km",
+                                "Play",
+                                BASE_URL+"/images/p1/play-arena.png"
                         ),
                         new NearbyLocation(
-                                "Bier Library Restaurant",
-                                "1.2 km",
+                                "Bier Library ",
+                                "4.6 km",
                                 "Restaurant",
-                                "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"
+                                BASE_URL+"/images/p1/bier-library.jpeg"
                         ),
                         new NearbyLocation(
-                                "Indiranagar Metro Station",
-                                "900 m",
-                                "Metro",
-                                "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb"
+                                "Gladia",
+                                "5.4 km",
+                                "Restaurant",
+                                BASE_URL+"/images/p1/gladia.png"
                         )
                 ))
                 .build();
@@ -125,8 +138,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p2/property-02-gallery-11.jpeg",
                         BASE_URL + "/images/p2/property-02-gallery-12.jpeg"
                 ))
-                .bedrooms(5)
-                .bathrooms(5)
+                .bedrooms("5")
+                .bathrooms("5")
                 .carpetArea("N/A")
                 .builtupArea("1569 sq.ft")
                 .parking("Ground Floor Car Parking")
@@ -171,8 +184,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p3/property-03-gallery-10.jpg",
                         BASE_URL + "/images/p3/property-03-gallery-11.jpg"
                 ))
-                .bedrooms(3)
-                .bathrooms(3)
+                .bedrooms("3")
+                .bathrooms("3")
                 .carpetArea("1100 sq.ft")
                 .builtupArea("1100 sq.ft")
                 .parking("2 Cars")
@@ -212,8 +225,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p4/property-04-gallery-07.jpg",
                         BASE_URL + "/images/p4/property-04-gallery-08.jpg"
                 ))
-                .bedrooms(0)
-                .bathrooms(0)
+                .bedrooms("2")
+                .bathrooms("2")
                 .carpetArea("N/A")
                 .builtupArea("N/A")
                 .parking("N/A")
@@ -268,8 +281,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p5/property-05-gallery-04.png",
                         BASE_URL + "/images/p5/property-05-gallery-05.png"
                 ))
-                .bedrooms(1)
-                .bathrooms(1)
+                .bedrooms("2")
+                .bathrooms("1")
                 .carpetArea("480 sq.ft")
                 .builtupArea("620 sq.ft")
                 .parking("1 Car")
@@ -315,8 +328,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p6/property-06-gallery-03.jpeg",
                         BASE_URL + "/images/p6/property-06-gallery-04.jpeg"
                 ))
-                .bedrooms(5)
-                .bathrooms(6)
+                .bedrooms("5")
+                .bathrooms("6")
                 .carpetArea("3800 sq.ft")
                 .builtupArea("5200 sq.ft")
                 .parking("3 Cars")
@@ -367,8 +380,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p7/property-07-gallery-10.jpeg",
                         BASE_URL + "/images/p7/property-07-gallery-11.jpeg"
                 ))
-                .bedrooms(3)
-                .bathrooms(3)
+                .bedrooms("3")
+                .bathrooms("3")
                 .carpetArea("1280 sq.ft")
                 .builtupArea("1760 sq.ft")
                 .parking("2 Cars")
@@ -416,8 +429,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p8/property-08-gallery-04.jpeg",
                         BASE_URL + "/images/p8/property-08-gallery-05.jpeg"
                 ))
-                .bedrooms(0)
-                .bathrooms(0)
+                .bedrooms("0")
+                .bathrooms("0")
                 .carpetArea("N/A")
                 .builtupArea("N/A")
                 .parking("N/A")

@@ -135,6 +135,7 @@ public class PropertyServiceImpl implements PropertyService {
                 .bedrooms(p.getBedrooms())
                 .bathrooms(p.getBathrooms())
                 .carpetArea(p.getCarpetArea())
+                .landArea(p.getLandArea())
                 .builtupArea(p.getBuiltupArea())
                 .parking(p.getParking())
                 .maintenance(p.getMaintenance())

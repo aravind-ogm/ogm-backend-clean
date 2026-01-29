@@ -39,9 +39,10 @@ public class Property {
     @CollectionTable(name = "property_images", joinColumns = @JoinColumn(name = "property_id"))
     @Column(name = "image_url", length = 1000)
     private List<String> images = new ArrayList<>();
-    private Integer bedrooms;
-    private Integer bathrooms;
+    private String bedrooms;
+    private String bathrooms;
     private String carpetArea;
+    private String landArea;
     private String builtupArea;
     private String parking;
     private String maintenance;
