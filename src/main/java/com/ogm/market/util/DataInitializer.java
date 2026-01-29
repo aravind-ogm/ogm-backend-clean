@@ -348,7 +348,7 @@ public class DataInitializer implements CommandLineRunner {
                 .price("₹1.65 Cr")
                 .type("Apartment")
                 .sqft("1760")
-                .reraApproved(false)
+                .reraApproved(true)
                 .image(BASE_URL + "/images/p7/property-07-main-01.jpeg")
                 .mainImages(Arrays.asList(
                         BASE_URL + "/images/p7/property-07-main-01.jpeg",
@@ -372,6 +372,7 @@ public class DataInitializer implements CommandLineRunner {
                 .carpetArea("1280 sq.ft")
                 .builtupArea("1760 sq.ft")
                 .parking("2 Cars")
+                .reraApproved(true)
                 .maintenance("₹4,000")
                 .furnishing("Unfurnished")
                 .facing("West")
@@ -447,104 +448,104 @@ public class DataInitializer implements CommandLineRunner {
 
 // ------------------------- PROPERTY 9 -------------------------
 
-        Property p9 = Property.builder()
-                .title("Premium 4BHK Villa in Whitefield")
-                .location("Prestige Glenmore Estates, Whitefield, Bengaluru")
-                .price("₹3.85 Cr")
-                .type("Independent Villa")
-                .sqft("4500")
-                .reraApproved(true)
-                .image(BASE_URL + "/images/p9/property-09-main-01.jpg")
-                .mainImages(Arrays.asList(
-                        BASE_URL + "/images/p9/property-09-main-01.jpg",
-                        BASE_URL + "/images/p9/property-09-main-01.jpg"
-                ))
-                .images(Arrays.asList(
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-01.jpg"
-                ))
-                .bedrooms(4)
-                .bathrooms(5)
-                .carpetArea("3200 sq.ft")
-                .builtupArea("4500 sq.ft")
-                .parking("3 Cars")
-                .maintenance("₹8,500")
-                .furnishing("Semi-Furnished")
-                .facing("East")
-                .description("An ultra-premium 4BHK villa with Italian marble flooring, dedicated servant room, full vastu compliance, and a lush private garden.")
-                .videoUrl(BASE_URL + "/videos/villa_tour_1.mp4")
-                .amenities(Arrays.asList(
-                        "3-Phase Power Backup",
-                        "24x7 Water Supply",
-                        "Gated Community Security",
-                        "Covered Car Parking",
-                        "Clubhouse & Gym",
-                        "Swimming Pool",
-                        "Landscaped Garden",
-                        "Children Play Area",
-                        "High-Speed Internet Ready",
-                        "Solar Water Heater",
-                        "Modular Kitchen",
-                        "Vitrified Tile Flooring"
-                ))
-                .build();
-
-// ------------------------- PROPERTY 10 -------------------------
-
-        Property p10 = Property.builder()
-                .title("Fully-Furnished G+3 Premium Home – RR Nagar")
-                .location("BHEL Layout Extension, Pattanagere, RR Nagar")
-                .price("₹2.6 Cr (Negotiable)")
-                .type("Residential Building")
-                .sqft("1000")
-                .reraApproved(true)
-                .image(BASE_URL + "/images/p10/property-10-main-01.jpg")
-                .mainImages(Arrays.asList(
-                        BASE_URL + "/images/p10/property-10-main-01.jpg",
-                        BASE_URL + "/images/p10/property-10-main-01.jpg"
-                ))
-                .images(Arrays.asList(
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
-                        BASE_URL + "/images/p10/property-10-gallery-01.jpg"
-                ))
-                .bedrooms(5)
-                .bathrooms(5)
-                .carpetArea("N/A")
-                .builtupArea("2400 sq.ft (Approx)")
-                .parking("Ground Floor Car Parking")
-                .maintenance("N/A")
-                .furnishing("Fully Furnished")
-                .facing("East")
-                .description("A premium 25x40 (1000 sq.ft) East-facing fully-furnished G+3 home with 30 squares construction. Features Italian marble flooring, teak wood interiors, LED-lit TV cabinet, modular kitchen with chimney, fall ceilings, Jaguar fittings, stainless steel & glass staircase railing, balconies, and a 10,000-liter sump with borewell.")
-                .videoUrl(BASE_URL + "/videos/p2_house_tour.mp4")
-                .amenities(Arrays.asList(
-                        "Italian Marble Flooring",
-                        "Teak Wood Construction",
-                        "Fully Furnished with Wardrobes",
-                        "Modern Modular Kitchen",
-                        "Fall Ceilings with LED Lighting",
-                        "Jaguar Premium Fittings",
-                        "Stainless Steel & Glass Staircase",
-                        "10,000 Liters Sump with Borewell",
-                        "Car Parking Space",
-                        "Geysers Installed",
-                        "Kitchen Exhaust Chimney",
-                        "TV Cabinet with LED Lights",
-                        "Balconies on First & Second Floors"
-                ))
-                .build();
+//        Property p9 = Property.builder()
+//                .title("Premium 4BHK Villa in Whitefield")
+//                .location("Prestige Glenmore Estates, Whitefield, Bengaluru")
+//                .price("₹3.85 Cr")
+//                .type("Independent Villa")
+//                .sqft("4500")
+//                .reraApproved(true)
+//                .image(BASE_URL + "/images/p9/property-09-main-01.jpg")
+//                .mainImages(Arrays.asList(
+//                        BASE_URL + "/images/p9/property-09-main-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-main-01.jpg"
+//                ))
+//                .images(Arrays.asList(
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg"
+//                ))
+//                .bedrooms(4)
+//                .bathrooms(5)
+//                .carpetArea("3200 sq.ft")
+//                .builtupArea("4500 sq.ft")
+//                .parking("3 Cars")
+//                .maintenance("₹8,500")
+//                .furnishing("Semi-Furnished")
+//                .facing("East")
+//                .description("An ultra-premium 4BHK villa with Italian marble flooring, dedicated servant room, full vastu compliance, and a lush private garden.")
+//                .videoUrl(BASE_URL + "/videos/villa_tour_1.mp4")
+//                .amenities(Arrays.asList(
+//                        "3-Phase Power Backup",
+//                        "24x7 Water Supply",
+//                        "Gated Community Security",
+//                        "Covered Car Parking",
+//                        "Clubhouse & Gym",
+//                        "Swimming Pool",
+//                        "Landscaped Garden",
+//                        "Children Play Area",
+//                        "High-Speed Internet Ready",
+//                        "Solar Water Heater",
+//                        "Modular Kitchen",
+//                        "Vitrified Tile Flooring"
+//                ))
+//                .build();
+//
+//// ------------------------- PROPERTY 10 -------------------------
+//
+//        Property p10 = Property.builder()
+//                .title("Fully-Furnished G+3 Premium Home – RR Nagar")
+//                .location("BHEL Layout Extension, Pattanagere, RR Nagar")
+//                .price("₹2.6 Cr (Negotiable)")
+//                .type("Residential Building")
+//                .sqft("1000")
+//                .reraApproved(true)
+//                .image(BASE_URL + "/images/p10/property-10-main-01.jpg")
+//                .mainImages(Arrays.asList(
+//                        BASE_URL + "/images/p10/property-10-main-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-main-01.jpg"
+//                ))
+//                .images(Arrays.asList(
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg",
+//                        BASE_URL + "/images/p10/property-10-gallery-01.jpg"
+//                ))
+//                .bedrooms(5)
+//                .bathrooms(5)
+//                .carpetArea("N/A")
+//                .builtupArea("2400 sq.ft (Approx)")
+//                .parking("Ground Floor Car Parking")
+//                .maintenance("N/A")
+//                .furnishing("Fully Furnished")
+//                .facing("East")
+//                .description("A premium 25x40 (1000 sq.ft) East-facing fully-furnished G+3 home with 30 squares construction. Features Italian marble flooring, teak wood interiors, LED-lit TV cabinet, modular kitchen with chimney, fall ceilings, Jaguar fittings, stainless steel & glass staircase railing, balconies, and a 10,000-liter sump with borewell.")
+//                .videoUrl(BASE_URL + "/videos/p2_house_tour.mp4")
+//                .amenities(Arrays.asList(
+//                        "Italian Marble Flooring",
+//                        "Teak Wood Construction",
+//                        "Fully Furnished with Wardrobes",
+//                        "Modern Modular Kitchen",
+//                        "Fall Ceilings with LED Lighting",
+//                        "Jaguar Premium Fittings",
+//                        "Stainless Steel & Glass Staircase",
+//                        "10,000 Liters Sump with Borewell",
+//                        "Car Parking Space",
+//                        "Geysers Installed",
+//                        "Kitchen Exhaust Chimney",
+//                        "TV Cabinet with LED Lights",
+//                        "Balconies on First & Second Floors"
+//                ))
+//                .build();
 
 
 //// ------------------------- PROPERTY 11 -------------------------
@@ -921,7 +922,7 @@ public class DataInitializer implements CommandLineRunner {
 //                ))
 //                .build();
         repo.saveAll(Arrays.asList(
-                p1, p2, p3, p4, p5, p6, p7, p8, p9, p10
+                p1, p2, p3, p4, p5, p6, p7, p8
 //                p11, p12, p13, p14, p15, p16, p17, p18, p19, p20
         ));
 
