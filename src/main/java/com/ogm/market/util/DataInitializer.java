@@ -255,7 +255,7 @@ public class DataInitializer implements CommandLineRunner {
                 .price("₹42 Lakhs")
                 .type("Studio")
                 .sqft("620")
-                .reraApproved(false)
+                .reraApproved(true)
                 .image(BASE_URL + "/images/p5/property-05-main-01.png")
                 .mainImages(Arrays.asList(
                         BASE_URL + "/images/p5/property-05-main-01.png",
@@ -404,20 +404,17 @@ public class DataInitializer implements CommandLineRunner {
                 .type("Plot")
                 .sqft("2400")
                 .reraApproved(true)
-                .image(BASE_URL + "/images/p8/property-08-main-01.jpg")
+                .image(BASE_URL + "/images/p8/property-08-main-01.jpeg")
                 .mainImages(Arrays.asList(
-                        BASE_URL + "/images/p8/property-08-main-01.jpg",
-                        BASE_URL + "/images/p8/property-08-main-01.jpg"
+                        BASE_URL + "/images/p8/property-08-main-01.jpeg",
+                        BASE_URL + "/images/p8/property-08-main-01.jpeg"
                 ))
                 .images(Arrays.asList(
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg",
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg",
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg",
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg",
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg",
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg",
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg",
-                        BASE_URL + "/images/p8/property-08-gallery-01.jpg"
+                        BASE_URL + "/images/p8/property-08-gallery-01.jpeg",
+                        BASE_URL + "/images/p8/property-08-gallery-02.jpeg",
+                        BASE_URL + "/images/p8/property-08-gallery-03.jpeg",
+                        BASE_URL + "/images/p8/property-08-gallery-04.jpeg",
+                        BASE_URL + "/images/p8/property-08-gallery-05.jpeg"
                 ))
                 .bedrooms(0)
                 .bathrooms(0)
