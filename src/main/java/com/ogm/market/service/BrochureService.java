@@ -1,31 +1,40 @@
 package com.ogm.market.service;
 
 import com.ogm.market.dto.BrochureRequest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 public class BrochureService {
 
-    // Folder where brochure files are stored
-    private final Path brochureDir = Paths.get("src/main/resources/static/brochures");
-
-    // Check if brochure exists
+    // Check if brochure exists in classpath
     public boolean brochureExists(String filename) {
-        return Files.exists(brochureDir.resolve(filename));
+        try {
+            ClassPathResource resource =
+                    new ClassPathResource("static/brochures/" + filename);
+            return resource.exists();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    // Return full brochure path for download
-    public Path getBrochurePath(String filename) {
-        return brochureDir.resolve(filename);
+    // Return InputStream for download
+    public InputStream getBrochureStream(String filename) throws IOException {
+        ClassPathResource resource =
+                new ClassPathResource("static/brochures/" + filename);
+
+        if (!resource.exists()) {
+            throw new IOException("Brochure not found");
+        }
+
+        return resource.getInputStream();
     }
 
     // Save lead / request (optional)
     public void recordRequest(BrochureRequest req) {
-        // TODO: save this to DB later
         System.out.println("Brochure request saved: " + req.getMobile());
     }
 }

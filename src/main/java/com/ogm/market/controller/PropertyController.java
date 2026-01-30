@@ -117,34 +117,28 @@ public class PropertyController {
 
         log.info("Brochure download requested: {}", file);
 
-        if (file == null || file.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid file name"));
-        }
-
-        Path path = brochureService.getBrochurePath(file);
-
-        if (!Files.exists(path)) {
-            log.error("Brochure not found on disk: {}", path);
-            return ResponseEntity.status(404).body(Map.of("error", "File not found"));
-        }
-
         try {
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(path.toFile()));
+            InputStreamResource resource =
+                    new InputStreamResource(brochureService.getBrochureStream(file));
 
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Content-Disposition", "attachment; filename=" + file);
+            headers.add(
+                    "Content-Disposition",
+                    "attachment; filename=\"" + file + "\""
+            );
 
             return ResponseEntity.ok()
                     .headers(headers)
-                    .contentLength(Files.size(path))
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(resource);
 
         } catch (Exception e) {
-            log.error("Failed to stream brochure file {}: {}", file, e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", "Server error while downloading"));
+            log.error("Failed to download brochure {}: {}", file, e.getMessage());
+            return ResponseEntity.status(404)
+                    .body(Map.of("error", "Brochure not found"));
         }
     }
+
 
 
     // ======================================================================
