@@ -17,7 +17,8 @@ public class WebCorsConfig {
 
         config.setAllowedOrigins(List.of(
                 "https://oneglobalmarketplace.com",
-                "https://www.oneglobalmarketplace.com"
+                "https://www.oneglobalmarketplace.com",
+                "http://localhost:3000"
         ));
 
         config.setAllowedMethods(List.of(
