@@ -33,9 +33,8 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:3000}")
 @RequestMapping("/api")
-class PropertyController {
+public class PropertyController {
 
     private static final Logger log = LoggerFactory.getLogger(PropertyController.class);
 
@@ -101,8 +100,9 @@ class PropertyController {
 
         brochureService.recordRequest(req);
 
-        // Return API download endpoint URL
-        String downloadUrl = "/api/brochure/download?file=" + brochureFile;
+        String downloadUrl =
+                "https://ogm-backend-clean-879813720468.asia-south1.run.app" +
+                        "/api/brochure/download?file=" + brochureFile;
 
         log.info("Brochure ready for download: {}", downloadUrl);
 
