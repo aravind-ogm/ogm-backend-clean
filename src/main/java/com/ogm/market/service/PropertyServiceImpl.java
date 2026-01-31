@@ -118,6 +118,7 @@ public class PropertyServiceImpl implements PropertyService {
                 .title(p.getTitle())
                 .location(p.getLocation())
                 .price(p.getPrice())
+                .slug(p.getSlug())
                 .image(prefix(p.getImage()))
                 .type(p.getType())
                 .sqft(p.getSqft())

@@ -18,11 +18,17 @@ public class DataInitializer implements CommandLineRunner {
     public DataInitializer(PropertyRepository repo) {
         this.repo = repo;
     }
+    private String slugify(String text) {
+        return text.toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-|-$)", "");
+    }
+
 
     @Override
     public void run(String... args) {
 
-        if (repo.count() > 0) return;
+//        if (repo.count() > 0) return;
 
 
 // ------------------------- PROPERTY 1 -------------------------
@@ -30,6 +36,7 @@ public class DataInitializer implements CommandLineRunner {
         Property p1 = Property.builder()
                 .title("Singapore Style 4 BHK Villa in Gattahalli")
                 .location("Astro GreenCascade, Gattahalli, Bengaluru")
+                .slug(slugify("Singapore Style 4 BHK Villa in Gattahalli"))
                 .price("₹ 6.32 Cr")
                 .type("Residential Villa")
                 .sqft("4300")
@@ -112,6 +119,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p2 = Property.builder()
                 .title("2 & 3 BHK Flats in Kasavanahalli")
+                .slug(slugify("2 & 3 BHK Flats in Kasavanahalli"))
                 .location("Kasavanhalli , Bengaluru, ( Near hsr layout )")
                 .price("₹1.25 Cr")
                 .type("Residential Building")
@@ -160,6 +168,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p3 = Property.builder()
                 .title("2 BHK Flats in Junnasandra")
+                .slug(slugify("2 BHK Flats in Junnasandra"))
                 .location("Junnasandra, Near Old Wipro Gate, Bengaluru")
                 .price("₹40 Lakhs")
                 .type("Residential Building")
@@ -204,6 +213,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p4 = Property.builder()
                 .title("2 BHK in Sobha Dream Acres ")
+                .slug(slugify("2 BHK in Sobha Dream Acres "))
                 .location("Sobha Dream Acres, Varthur, Bengaluru")
                 .price("₹75.5 Lakhs")
                 .type("Large Community Building")
@@ -264,6 +274,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p5 = Property.builder()
                 .title("3BHK – Electronic City")
+                .slug(slugify("3BHK – Electronic City"))
                 .location("Ajmera Silicon Valley, Electronic City Phase 1")
                 .price("₹42 Lakhs")
                 .type("Studio")
@@ -312,6 +323,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p6 = Property.builder()
                 .title("Skyline 5BHK Penthouse – Indiranagar")
+                .slug(slugify("Skyline 5BHK Penthouse – Indiranagar"))
                 .location("Indiranagar 100 Ft Road, Bengaluru")
                 .price("₹5.6 Cr")
                 .type("Penthouse")
@@ -357,6 +369,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p7 = Property.builder()
                 .title("Premium 3BHK Apartment – Sarjapur Road")
+                .slug(slugify("Premium 3BHK Apartment – Sarjapur Road"))
                 .location("DS-Max Sapphire, Sarjapur Road, Bengaluru")
                 .price("₹1.65 Cr")
                 .type("Apartment")
@@ -412,6 +425,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p8 = Property.builder()
                 .title("Premium Gated Villa Plot – Devanahalli")
+                .slug(slugify("Premium Gated Villa Plot – Devanahalli"))
                 .location("Brigade Orchards, Devanahalli, Bengaluru")
                 .price("₹95 Lakhs")
                 .type("Plot")

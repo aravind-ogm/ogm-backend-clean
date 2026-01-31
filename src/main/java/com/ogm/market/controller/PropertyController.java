@@ -197,6 +197,14 @@ public class PropertyController {
         return propertyService.getProperty(id);
     }
 
+    @GetMapping("/properties/slug/{slug}")
+    public ResponseEntity<Property> getPropertyBySlug(@PathVariable String slug) {
+        return propertyRepository.findBySlug(slug)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
     @PostMapping("/properties")
     public ResponseEntity<PropertyResponse> createProperty(@RequestBody PropertyRequest request) {
         log.info("Creating new property: title={}", request.getTitle());

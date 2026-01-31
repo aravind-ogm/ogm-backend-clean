@@ -41,4 +41,5 @@ public class PropertyResponse {
     private String videoUrl;
     private List<NearbyLocation> nearby;
 
+    private String slug;
 }

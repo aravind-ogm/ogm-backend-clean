@@ -57,4 +57,17 @@ public class Property {
             joinColumns = @JoinColumn(name = "property_id")
     )
     private List<NearbyLocation> nearby;
+
+    @Column(unique = true, nullable = false)
+    private String slug;
+
+    @PrePersist
+    public void autoGenerateSlug() {
+        if (this.slug == null || this.slug.isBlank()) {
+            this.slug = this.title.toLowerCase()
+                    .replaceAll("[^a-z0-9]+", "-")
+                    .replaceAll("(^-|-$)", "");
+        }
+    }
+
 }
