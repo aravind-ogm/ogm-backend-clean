@@ -36,7 +36,7 @@ public class DataInitializer implements CommandLineRunner {
         Property p1 = Property.builder()
                 .title("Singapore Style 4 BHK Villa in Gattahalli")
                 .location("Astro GreenCascade, Gattahalli, Bengaluru")
-                .slug(slugify("Singapore Style 4 BHK Villa in Gattahalli"))
+                .slug(slugify("astro-green-cascade-off-sarjapur-road"))
                 .price("₹ 6.32 Cr")
                 .type("Residential Villa")
                 .sqft("4300")
