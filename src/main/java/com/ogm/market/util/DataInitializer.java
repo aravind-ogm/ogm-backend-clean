@@ -18,6 +18,7 @@ public class DataInitializer implements CommandLineRunner {
     public DataInitializer(PropertyRepository repo) {
         this.repo = repo;
     }
+
     private String slugify(String text) {
         return text.toLowerCase()
                 .replaceAll("[^a-z0-9]+", "-")
@@ -97,19 +98,19 @@ public class DataInitializer implements CommandLineRunner {
                                 "Play Arena",
                                 "4.8 km",
                                 "Play",
-                                BASE_URL+"/images/p1/play-arena.png"
+                                BASE_URL + "/images/p1/play-arena.png"
                         ),
                         new NearbyLocation(
                                 "Bier Library ",
                                 "4.6 km",
                                 "Restaurant",
-                                BASE_URL+"/images/p1/bier-library.jpeg"
+                                BASE_URL + "/images/p1/bier-library.jpeg"
                         ),
                         new NearbyLocation(
                                 "Gladia",
                                 "5.4 km",
                                 "Restaurant",
-                                BASE_URL+"/images/p1/gladia.png"
+                                BASE_URL + "/images/p1/gladia.png"
                         )
                 ))
                 .build();
@@ -273,13 +274,13 @@ public class DataInitializer implements CommandLineRunner {
 // ------------------------- PROPERTY 5 -------------------------
 
         Property p5 = Property.builder()
-                .title("3BHK – Electronic City")
-                .slug(slugify("3BHK – Electronic City"))
-                .location("Ajmera Silicon Valley, Electronic City Phase 1")
-                .price("₹42 Lakhs")
-                .type("Studio")
+                .title("Hello Bali Homes – Holiday Homes")
+                .slug(slugify("Hello-Bali-Homes–Holiday-Home-Tamilnadu"))
+                .location("Palacode, Nariyanahalli, Tamil Nadu – 636808")
+                .price("1.25 Cr to 2.5 Cr")
+                .type("2 & 3 BHK Weekend Villas")
                 .sqft("620")
-                .reraApproved(true)
+                .reraApproved(false)
                 .image(BASE_URL + "/images/p5/property-05-main-01.png")
                 .mainImages(Arrays.asList(
                         BASE_URL + "/images/p5/property-05-main-01.png",
@@ -295,26 +296,30 @@ public class DataInitializer implements CommandLineRunner {
                 .bedrooms("2")
                 .bathrooms("1")
                 .carpetArea("480 sq.ft")
-                .builtupArea("620 sq.ft")
+                .builtupArea("10k sqft to 20k sqft plots")
                 .parking("1 Car")
-                .maintenance("₹2,000")
-                .furnishing("Fully Furnished")
-                .facing("South")
-                .description("Ideal for bachelors and young working professionals near major IT parks with all modern amenities.")
+                .maintenance("NA")
+                .furnishing("Unfurnished")
+                .facing("East")
+                .description("Hello Bali is a thoughtfully designed luxury weekend villa community inspired by Balinese architecture and tropical living. Set amidst lush greenery and tranquil landscapes, the project blends modern European design, nature-centric planning, and resort-style amenities to create a private retreat for families and investors.")
                 .videoUrl(BASE_URL + "/videos/studio_tour.mp4")
                 .amenities(Arrays.asList(
-                        "3-Phase Power Backup",
-                        "24x7 Water Supply",
-                        "Gated Community Security",
-                        "Covered Car Parking",
-                        "Clubhouse & Gym",
                         "Swimming Pool",
-                        "Landscaped Garden",
-                        "Children Play Area",
-                        "High-Speed Internet Ready",
-                        "Solar Water Heater",
-                        "Modular Kitchen",
-                        "Vitrified Tile Flooring"
+                        "Gym",
+                        "Spa Room (Steam & Sauna)",
+                        "Indoor Games & Card Room",
+                        "Banquet Hall",
+                        "Cloud Kitchen / Café",
+                        "Senior Citizens’ Area",
+                        "Children’s Play Area",
+                        "Jogging & Cycling Track",
+                        "Yoga Deck",
+                        "Forest / Mango Trail",
+                        "Open Badminton Area",
+                        "Beach Volleyball Court",
+                        "Outdoor Pickleball Court",
+                        "Cricket Practice Net",
+                        "Landscaped Common Amenity Zones"
                 ))
                 .build();
 
@@ -322,11 +327,11 @@ public class DataInitializer implements CommandLineRunner {
 // ------------------------- PROPERTY 6 -------------------------
 
         Property p6 = Property.builder()
-                .title("Skyline 5BHK Penthouse – Indiranagar")
-                .slug(slugify("Skyline 5BHK Penthouse – Indiranagar"))
-                .location("Indiranagar 100 Ft Road, Bengaluru")
-                .price("₹5.6 Cr")
-                .type("Penthouse")
+                .title("2, 3 & 4 BHK’s Off Sarjapura – Attibele Road")
+                .slug(slugify("2, 3 & 4 BHK’s Off Sarjapura – Attibele Road"))
+                .location("Maruti Akrida , Bidaraguppe, Mallenahalli, Bangalore, Karnataka 562107")
+                .price("₹81 Lakh to ₹1.98 Crore")
+                .type("Residential Apartment")
                 .sqft("5200")
                 .reraApproved(true)
                 .image(BASE_URL + "/images/p6/property-06-main-01.jpeg")
@@ -343,38 +348,36 @@ public class DataInitializer implements CommandLineRunner {
                 .bedrooms("5")
                 .bathrooms("6")
                 .carpetArea("3800 sq.ft")
-                .builtupArea("5200 sq.ft")
+                .builtupArea("1098 – 2390 sq.ft")
                 .parking("3 Cars")
                 .maintenance("₹12,000")
-                .furnishing("Fully Furnished")
-                .facing("North-East")
-                .description("An ultra-luxurious penthouse with an open deck, skyline views, infinity jacuzzi, and German modular kitchen.")
+                .furnishing("Unfurnished")
+                .facing("Not Specified")
+                .description("Life at Maruti Akrida is designed around the little moments that make a house feel like home. Open mornings, relaxed evenings, and weekends spent without rushing anywhere. Nestled near Sarjapura–Attibele, this RERA-certified residential project offers spacious 2, 3, and 4 BHK apartments across three G+6 blocks, each planned for comfort, light, and flow. The homes are practical yet welcoming, with layouts that adapt effortlessly to everyday family life. Step outside and you’ll find thoughtfully curated amenities including a swimming pool, sports courts, landscaped gardens, and dedicated spaces for children, seniors, and pets. Well-connected to major IT hubs and upcoming infrastructure, Maruti Akrida brings together convenience, community, and a calm, well-balanced lifestyle.")
                 .videoUrl(BASE_URL + "/videos/plot_6.mov")
                 .amenities(Arrays.asList(
-                        "3-Phase Power Backup",
-                        "24x7 Water Supply",
-                        "Gated Community Security",
-                        "Covered Car Parking",
-                        "Clubhouse & Gym",
+                        "Gated Community with 24×7 Security",
+                        "CCTV Surveillance",
+                        "Clubhouse & Party Hall",
+                        "Gym",
+                        "Indoor Games",
+                        "Children’s Play Zone",
                         "Swimming Pool",
-                        "Landscaped Garden",
-                        "Children Play Area",
-                        "High-Speed Internet Ready",
-                        "Solar Water Heater",
-                        "Modular Kitchen",
-                        "Vitrified Tile Flooring"
+                        "Multipurpose Sports Court",
+                        "Landscaped Gardens & Walking Track"
                 ))
+
                 .build();
 // ------------------------- PROPERTY 7 -------------------------
 
         Property p7 = Property.builder()
-                .title("Premium 3BHK Apartment – Sarjapur Road")
-                .slug(slugify("Premium 3BHK Apartment – Sarjapur Road"))
-                .location("DS-Max Sapphire, Sarjapur Road, Bengaluru")
-                .price("₹1.65 Cr")
-                .type("Apartment")
+                .title("Ridgewood Villas on Sarjapur – Bagalur Road")
+                .slug(slugify("Ridgewood Villas on Sarjapur – Bagalur Road"))
+                .location("Bagalur - Sarjapur Rd, Hosur, Tamil Nadu 635103")
+                .price("₹1.5 Cr – ₹2.0 Cr")
+                .type("Independent Villa")
                 .sqft("1760")
-                .reraApproved(true)
+                .reraApproved(false)
                 .image(BASE_URL + "/images/p7/property-07-main-01.jpeg")
                 .mainImages(Arrays.asList(
                         BASE_URL + "/images/p7/property-07-main-01.jpeg",
@@ -396,27 +399,41 @@ public class DataInitializer implements CommandLineRunner {
                 .bedrooms("3")
                 .bathrooms("3")
                 .carpetArea("1280 sq.ft")
-                .builtupArea("1760 sq.ft")
+                .builtupArea("1500 – 3000 sq.ft")
                 .parking("2 Cars")
                 .reraApproved(true)
-                .maintenance("₹4,000")
+                .maintenance("N/A")
                 .furnishing("Unfurnished")
-                .facing("West")
-                .description("Strategically located 3BHK apartment with clubhouse, swimming pool, kids play area, and 24/7 security.")
+                .facing("Not specified")
+                .description("Life at Maruti Akrida is designed around the little moments that make a house feel like home. Open mornings, relaxed evenings, and weekends spent without rushing anywhere. Nestled near Sarjapura–Attibele, this RERA-certified residential project offers spacious 2, 3, and 4 BHK apartments across three G+6 blocks, each planned for comfort, light, and flow. The homes are practical yet welcoming, with layouts that adapt effortlessly to everyday family life. Step outside and you’ll find thoughtfully curated amenities including a swimming pool, sports courts, landscaped gardens, and dedicated spaces for children, seniors, and pets. Well-connected to major IT hubs and upcoming infrastructure, Maruti Akrida brings together convenience, community, and a calm, well-balanced lifestyle.")
                 .videoUrl(BASE_URL + "/videos/apartment_tour_7.mp4")
                 .amenities(Arrays.asList(
-                        "3-Phase Power Backup",
-                        "24x7 Water Supply",
-                        "Gated Community Security",
-                        "Covered Car Parking",
-                        "Clubhouse & Gym",
+                        "Aromatic Garden",
+                        "Sculpture Garden",
+                        "Extensive Green Area",
+                        "Amphitheatre",
+                        "Jogging / Walking Track",
+                        "Pergolas & Trellis Seating",
+                        "Gazebo",
+                        "Stone Seaters",
+                        "Open Play Field",
+                        "Informal Turf Area",
+                        "Senior Citizen Park",
+                        "Children’s Play Area / Tot Lot",
+                        "Dense Buffer Plantation",
+                        "Check Dam & Viewing Deck",
+                        "Sand Pit",
+                        "Off-Leash Dog Park",
+                        "Clubhouse",
                         "Swimming Pool",
-                        "Landscaped Garden",
-                        "Children Play Area",
-                        "High-Speed Internet Ready",
-                        "Solar Water Heater",
-                        "Modular Kitchen",
-                        "Vitrified Tile Flooring"
+                        "Gym / Aerobics",
+                        "Lounge",
+                        "Billiards & Cards",
+                        "Table Tennis",
+                        "Carom & Chess",
+                        "Library",
+                        "Multipurpose Hall",
+                        "Yoga & Meditation Center"
                 ))
                 .build();
 
@@ -424,8 +441,8 @@ public class DataInitializer implements CommandLineRunner {
 // ------------------------- PROPERTY 8 -------------------------
 
         Property p8 = Property.builder()
-                .title("Premium Gated Villa Plot – Devanahalli")
-                .slug(slugify("Premium Gated Villa Plot – Devanahalli"))
+                .title("Opening Soon – Villa Project")
+                .slug(slugify("Villa-Project"))
                 .location("Brigade Orchards, Devanahalli, Bengaluru")
                 .price("₹95 Lakhs")
                 .type("Plot")
