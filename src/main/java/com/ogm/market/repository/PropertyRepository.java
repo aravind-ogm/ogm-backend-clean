@@ -18,9 +18,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     @Query("""
         SELECT p FROM Property p
         WHERE
-            (:q IS NULL OR LOWER(p.title) LIKE %:q%
-                OR LOWER(p.location) LIKE %:q%
-                OR LOWER(p.description) LIKE %:q%
+                (:q IS NULL OR
+                    LOWER(p.title) LIKE %:q% OR
+                    LOWER(p.location) LIKE %:q% OR
+                    LOWER(p.description) LIKE %:q%
             )
         AND (:type IS NULL OR LOWER(p.type) = LOWER(:type))
         AND (:minPrice IS NULL OR p.price >= :minPrice)
@@ -46,4 +47,3 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             Pageable pageable
     );
 }
-
