@@ -13,12 +13,17 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(Customizer.withDefaults())   // 🔥 THIS LINE IS CRITICAL
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/contact/**").permitAll()
-                .anyRequest().permitAll()
-            );
+                // ✅ Enable CORS (uses WebCorsConfig)
+                .cors(Customizer.withDefaults())
+
+                // ✅ Disable CSRF for REST API
+                .csrf(csrf -> csrf.disable())
+
+                // ✅ Allow all requests (you can restrict later)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/contact/**").permitAll()
+                        .anyRequest().permitAll()
+                );
 
         return http.build();
     }
