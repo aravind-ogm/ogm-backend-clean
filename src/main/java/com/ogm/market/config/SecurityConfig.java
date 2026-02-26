@@ -25,7 +25,7 @@ public class SecurityConfig {
                 /* Authorization */
                 .authorizeHttpRequests(auth -> auth
 
-                        /* ✅ PUBLIC STATIC RESOURCES (THIS FIXES 403 IMAGES) */
+                        /* ✅ STATIC RESOURCES */
                         .requestMatchers(
                                 new AntPathRequestMatcher("/images/**"),
                                 new AntPathRequestMatcher("/videos/**"),
@@ -39,6 +39,8 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/properties/**",
                                 "/api/ai/**",
+                                "/api/live-tour/**",   // 🔥 ADD THIS
+                                "/live-queue/**",      // 🔥 ADD THIS (WebSocket)
                                 "/"
                         ).permitAll()
 

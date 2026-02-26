@@ -21,7 +21,7 @@ public class Property {
 
     private String title;
     private String location;
-    private String price;
+    private Double price;
     private String image;
     private String type;
     private String sqft;

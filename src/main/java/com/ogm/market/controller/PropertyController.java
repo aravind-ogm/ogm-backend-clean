@@ -166,26 +166,27 @@ public class PropertyController {
     public Page<PropertyResponse> search(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) Long minPrice,
-            @RequestParam(required = false) Long maxPrice,
-            @RequestParam(required = false) Integer bhk,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Boolean rera,
+            @RequestParam(required = false) String bhk,
+            @RequestParam(required = false) String facing,
+            @RequestParam(required = false) String furnishing,
             Pageable pageable
     ) {
+
         return propertyService.listProperties(
                 q,
                 type,
                 minPrice,
                 maxPrice,
-                null,
-                null,
-                null,
+                rera,
                 bhk,
-                null,
-                null,
+                facing,
+                furnishing,
                 pageable
         );
     }
-
 
     @GetMapping("/properties/{id}")
     public PropertyResponse getProperty(@PathVariable Long id) {

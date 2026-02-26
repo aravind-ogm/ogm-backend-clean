@@ -22,24 +22,28 @@ public class AISearchServiceImpl implements AISearchService {
     }
 
     @Override
-    @Transactional(readOnly = true)   // ✅ THIS IS THE KEY FIX
+    @Transactional(readOnly = true)
     public Page<PropertyResponse> search(String prompt, Pageable pageable) {
 
         if (prompt == null || prompt.isBlank()) {
             return Page.empty(pageable);
         }
 
-        String q = prompt.toLowerCase();
+        String lowerPrompt = prompt.toLowerCase();
 
-        Integer bhk = extractBhk(q);
-        String location = extractLocation(q);
-        String type = extractType(q);
+        // Extract filters
+        Integer bhkInt = extractBhk(lowerPrompt);
+        String bhk = bhkInt != null ? String.valueOf(bhkInt) : null;
+
+        String location = extractLocation(lowerPrompt);
+        String type = extractType(lowerPrompt);
+
+        // Prefer location if detected
+        String searchText = location != null ? location : lowerPrompt;
 
         Page<Property> page = repository.advancedSearch(
-                location,   // q
+                searchText,
                 type,
-                null,
-                null,
                 null,
                 null,
                 null,
@@ -52,7 +56,7 @@ public class AISearchServiceImpl implements AISearchService {
         return page.map(mapper::toResponse);
     }
 
-    /* ---------------- AI PARSERS ---------------- */
+    /* ================= AI PARSERS ================= */
 
     private Integer extractBhk(String q) {
         if (q.contains("1 bhk")) return 1;
@@ -67,12 +71,16 @@ public class AISearchServiceImpl implements AISearchService {
         if (q.contains("electronic city")) return "electronic city";
         if (q.contains("whitefield")) return "whitefield";
         if (q.contains("bellandur")) return "bellandur";
+        if (q.contains("kasavanahalli")) return "kasavanahalli";
+        if (q.contains("junnasandra")) return "junnasandra";
+        if (q.contains("varthur")) return "varthur";
         return null;
     }
 
     private String extractType(String q) {
         if (q.contains("villa")) return "villa";
         if (q.contains("plot")) return "plot";
-        return "apartment"; // safe default
+        if (q.contains("apartment")) return "apartment";
+        return null; // don't force filter
     }
 }

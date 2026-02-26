@@ -33,23 +33,20 @@ public class PropertyServiceImpl implements PropertyService {
     public Page<PropertyResponse> listProperties(
             String q,
             String type,
-            Long minPrice,
-            Long maxPrice,
-            Integer minSqft,
-            Integer maxSqft,
+            Double minPrice,
+            Double maxPrice,
             Boolean rera,
-            Integer bhk,
+            String bhk,
             String facing,
             String furnishing,
             Pageable pageable
     ) {
+
         return repository.advancedSearch(
                 q == null ? null : q.toLowerCase(),
                 type,
                 minPrice,
                 maxPrice,
-                minSqft,
-                maxSqft,
                 rera,
                 bhk,
                 facing,
@@ -116,7 +113,6 @@ public class PropertyServiceImpl implements PropertyService {
     // ================= DTO MAPPER =================
     private PropertyResponse toResponse(Property p) {
 
-        // ✅ FORCE initialization INSIDE transaction
         Hibernate.initialize(p.getAmenities());
         Hibernate.initialize(p.getMainImages());
         Hibernate.initialize(p.getImages());
@@ -126,27 +122,19 @@ public class PropertyServiceImpl implements PropertyService {
                 .id(p.getId())
                 .title(p.getTitle())
                 .location(p.getLocation())
-                .price(p.getPrice())
+                .price(String.valueOf(p.getPrice())) // frontend expects String
                 .slug(p.getSlug())
                 .image(prefix(p.getImage()))
                 .type(p.getType())
                 .sqft(p.getSqft())
                 .reraApproved(p.isReraApproved())
                 .soldOut(p.isSoldOut())
-
                 .mainImages(p.getMainImages() == null ? null :
-                        p.getMainImages().stream()
-                                .map(this::prefix)
-                                .toList())
-
+                        p.getMainImages().stream().map(this::prefix).toList())
                 .images(p.getImages() == null ? null :
-                        p.getImages().stream()
-                                .map(this::prefix)
-                                .toList())
-
+                        p.getImages().stream().map(this::prefix).toList())
                 .amenities(p.getAmenities())
                 .nearby(p.getNearby())
-
                 .bedrooms(p.getBedrooms())
                 .bathrooms(p.getBathrooms())
                 .carpetArea(p.getCarpetArea())
@@ -161,12 +149,12 @@ public class PropertyServiceImpl implements PropertyService {
                 .build();
     }
 
-
     // ================= URL PREFIX =================
     private String prefix(String url) {
         if (url == null) return null;
         if (url.startsWith("http")) return url;
         if (storageBaseUrl == null || storageBaseUrl.isBlank()) return url;
+
         return url.startsWith("/") ?
                 storageBaseUrl + url :
                 storageBaseUrl + "/" + url;

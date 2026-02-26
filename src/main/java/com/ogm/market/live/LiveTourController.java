@@ -1,0 +1,53 @@
+package com.ogm.market.live;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/live-tour")
+@RequiredArgsConstructor
+@CrossOrigin
+public class LiveTourController {
+
+    private final LiveTourService service;
+
+    // 🔔 Availability
+    @GetMapping("/availability/{propertyId}")
+    public AvailabilityResponse availability(
+            @PathVariable Long propertyId) {
+        return service.getAvailability(propertyId);
+    }
+
+    // ⏳ Join Queue
+    @PostMapping("/join-queue")
+    public Integer joinQueue(
+            @RequestBody JoinQueueRequest request) {
+        return service.joinQueue(request);
+    }
+
+    // 📊 Start Session
+    @PostMapping("/start-session")
+    public void startSession(
+            @RequestParam Long propertyId,
+            @RequestParam Long agentId,
+            @RequestParam String name,
+            @RequestParam String mobile) {
+
+        service.startSession(propertyId, agentId, name, mobile);
+    }
+
+    // 📊 End Session
+    @PostMapping("/end-session/{sessionId}")
+    public void endSession(@PathVariable Long sessionId) {
+        service.endSession(sessionId);
+    }
+
+    @PostMapping("/token")
+    public String generateToken(@RequestParam String userName) {
+
+        // Call 100ms server API here
+        // Return generated token
+
+        return "generated-token-from-100ms";
+    }
+}

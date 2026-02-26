@@ -10,12 +10,10 @@ public interface PropertyService {
     Page<PropertyResponse> listProperties(
             String q,
             String type,
-            Long minPrice,
-            Long maxPrice,
-            Integer minSqft,
-            Integer maxSqft,
+            Double minPrice,
+            Double maxPrice,
             Boolean rera,
-            Integer bhk,
+            String bhk,
             String facing,
             String furnishing,
             Pageable pageable
@@ -23,10 +21,10 @@ public interface PropertyService {
 
     PropertyResponse getProperty(Long id);
 
-
     PropertyResponse createProperty(PropertyRequest request);
 
     PropertyResponse updateProperty(Long id, PropertyRequest request);
 
     void deleteProperty(Long id);
+
 }

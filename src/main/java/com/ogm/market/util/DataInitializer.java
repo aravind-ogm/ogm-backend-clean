@@ -34,7 +34,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("Singapore Style 4 BHK Villa in Gattahalli")
                 .location("Astro GreenCascade, Gattahalli, Bengaluru")
                 .slug(slugify("astro-green-cascade-off-sarjapur-road"))
-                .price("₹ 6.32 Cr")
+                .price(parseIndianPrice("₹ 6.32 Cr"))
                 .type("Residential Villa")
                 .sqft("4300")
                 .reraApproved(true)
@@ -118,7 +118,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("2 & 3 BHK Flats in Kasavanahalli")
                 .slug(slugify("2 & 3 BHK Flats in Kasavanahalli"))
                 .location("Kasavanhalli , Bengaluru, ( Near hsr layout )")
-                .price("₹1.25 Cr")
+                .price(parseIndianPrice("₹1.25 Cr"))
                 .type("Residential Building")
                 .sqft("1569")
                 .reraApproved(true)
@@ -167,7 +167,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("2 BHK Flats in Junnasandra")
                 .slug(slugify("2 BHK Flats in Junnasandra"))
                 .location("Junnasandra, Near Old Wipro Gate, Bengaluru")
-                .price("₹40 Lakhs")
+                .price(parseIndianPrice("₹40 Lakhs"))
                 .type("Residential Building")
                 .sqft("1100")
                 .reraApproved(true)
@@ -212,7 +212,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("2 BHK in Sobha Dream Acres ")
                 .slug(slugify("2 BHK in Sobha Dream Acres "))
                 .location("Sobha Dream Acres, Varthur, Bengaluru")
-                .price("₹75.5 Lakhs")
+                .price(parseIndianPrice("₹75.5 Lakhs"))
                 .type("Large Community Building")
                 .sqft("1012")
                 .reraApproved(true)
@@ -273,7 +273,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("Hello Bali Homes – Holiday Homes")
                 .slug(slugify("Hello-Bali-Homes–Holiday-Home-Tamilnadu"))
                 .location("Palacode, Nariyanahalli, Tamil Nadu – 636808")
-                .price("1.25 Cr to 2.5 Cr")
+                .price(parseIndianPrice("1.25 Cr to 2.5 Cr"))
                 .type("2 & 3 BHK Weekend Villas")
                 .sqft("620")
                 .reraApproved(false)
@@ -326,7 +326,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("2, 3 & 4 BHK’s Off Sarjapura – Attibele Road")
                 .slug(slugify("2, 3 & 4 BHK’s Off Sarjapura – Attibele Road"))
                 .location("Maruti Akrida , Bidaraguppe, Mallenahalli, Bangalore, Karnataka 562107")
-                .price("₹81 Lakh to ₹1.98 Crore")
+                .price(parseIndianPrice("₹81 Lakh to ₹1.98 Crore"))
                 .type("Residential Apartment")
                 .sqft("5200")
                 .reraApproved(true)
@@ -369,7 +369,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("Ridgewood Villas on Sarjapur – Bagalur Road")
                 .slug(slugify("Ridgewood Villas on Sarjapur – Bagalur Road"))
                 .location("Bagalur - Sarjapur Rd, Hosur, Tamil Nadu 635103")
-                .price("₹1.5 Cr – ₹2.0 Cr")
+                .price(parseIndianPrice("₹1.5 Cr – ₹2.0 Cr"))
                 .type("Independent Villa")
                 .sqft("1760")
                 .reraApproved(false)
@@ -439,7 +439,7 @@ public class DataInitializer implements CommandLineRunner {
                 .title("Opening Soon – Villa Project")
                 .slug(slugify("Villa-Project"))
                 .location("Brigade Orchards, Devanahalli, Bengaluru")
-                .price("₹95 Lakhs")
+                .price(parseIndianPrice("₹95 Lakhs"))
                 .type("Plot")
                 .sqft("2400")
                 .reraApproved(true)
@@ -485,5 +485,42 @@ public class DataInitializer implements CommandLineRunner {
         repo.saveAll(Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8));
 
         System.out.println("✔ Sample properties loaded successfully.");
+    }
+
+    private Double parseIndianPrice(String priceStr) {
+
+        if (priceStr == null || priceStr.isBlank()) return 0.0;
+
+        priceStr = priceStr.replaceAll("[₹,]", "")
+                .replaceAll("\\(.*?\\)", "")
+                .trim()
+                .toLowerCase();
+
+        // Handle range (take first value)
+        if (priceStr.contains("to") || priceStr.contains("–")) {
+            priceStr = priceStr.split("to|–")[0].trim();
+        }
+
+        double multiplier = 1;
+
+        if (priceStr.contains("crore")) {
+            multiplier = 1_00_00_000;
+            priceStr = priceStr.replace("crore", "").trim();
+        }
+        else if (priceStr.contains("cr")) {
+            multiplier = 1_00_00_000;
+            priceStr = priceStr.replace("cr", "").trim();
+        }
+        else if (priceStr.contains("lakhs")) {
+            multiplier = 1_00_000;
+            priceStr = priceStr.replace("lakhs", "").trim();
+        }
+        else if (priceStr.contains("lakh")) {
+            multiplier = 1_00_000;
+            priceStr = priceStr.replace("lakh", "").trim();
+        }
+
+        double value = Double.parseDouble(priceStr);
+        return value * multiplier;
     }
 }

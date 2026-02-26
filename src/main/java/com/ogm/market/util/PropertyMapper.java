@@ -26,7 +26,7 @@ public class PropertyMapper {
                 .id(p.getId())
                 .title(p.getTitle())
                 .location(p.getLocation())
-                .price(p.getPrice())
+                .price(String.valueOf(p.getPrice()))
                 .type(p.getType())
                 .sqft(p.getSqft())
 
