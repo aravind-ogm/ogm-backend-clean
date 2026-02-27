@@ -489,54 +489,57 @@ public class DataInitializer implements CommandLineRunner {
 
 // ------------------------- PROPERTY 9 -------------------------
 
-//        Property p9 = Property.builder()
-//                .title("Premium 4BHK Villa in Whitefield")
-//                .location("Prestige Glenmore Estates, Whitefield, Bengaluru")
-//                .price("₹3.85 Cr")
-//                .type("Independent Villa")
-//                .sqft("4500")
-//                .reraApproved(true)
-//                .image(BASE_URL + "/images/p9/property-09-main-01.jpg")
-//                .mainImages(Arrays.asList(
-//                        BASE_URL + "/images/p9/property-09-main-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-main-01.jpg"
-//                ))
-//                .images(Arrays.asList(
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
-//                        BASE_URL + "/images/p9/property-09-gallery-01.jpg"
-//                ))
-//                .bedrooms(4)
-//                .bathrooms(5)
-//                .carpetArea("3200 sq.ft")
-//                .builtupArea("4500 sq.ft")
+        Property p9 = Property.builder()
+                .title("7500 sqft Commercial Space in Whitefield")
+                .location("Y @ Whitefield Back gate")
+                .price("N/A")
+                .type("Commercial Space")
+                .sqft("Split option is available from 1800 square feet")
+                .reraApproved(true)
+                .image(BASE_URL + "/images/p9/property-09-main-01.jpg")
+                .mainImages(Arrays.asList(
+                        BASE_URL + "/images/p9/property-09-main-01.jpg",
+                        BASE_URL + "/images/p9/property-09-main-01.jpg"
+                ))
+                .images(Arrays.asList(
+                        BASE_URL + "/images/p9/property-09-gallery-01.jpg",
+                        BASE_URL + "/images/p9/property-09-gallery-02.jpg",
+                        BASE_URL + "/images/p9/property-09-gallery-03.jpg",
+                        BASE_URL + "/images/p9/property-09-gallery-04.jpg",
+                        BASE_URL + "/images/p9/property-09-gallery-05.jpg"
+                ))
+                .bedrooms(String.valueOf("N/A"))
+                .bathrooms(String.valueOf("Central Bathroom Setup"))
+                .carpetArea("N/A")
+                .builtupArea("7500 SQF")
 //                .parking("3 Cars")
-//                .maintenance("₹8,500")
-//                .furnishing("Semi-Furnished")
-//                .facing("East")
-//                .description("An ultra-premium 4BHK villa with Italian marble flooring, dedicated servant room, full vastu compliance, and a lush private garden.")
-//                .videoUrl(BASE_URL + "/videos/villa_tour_1.mp4")
-//                .amenities(Arrays.asList(
-//                        "3-Phase Power Backup",
-//                        "24x7 Water Supply",
-//                        "Gated Community Security",
-//                        "Covered Car Parking",
-//                        "Clubhouse & Gym",
-//                        "Swimming Pool",
-//                        "Landscaped Garden",
-//                        "Children Play Area",
-//                        "High-Speed Internet Ready",
-//                        "Solar Water Heater",
-//                        "Modular Kitchen",
-//                        "Vitrified Tile Flooring"
-//                ))
-//                .build();
-//
+                .maintenance("Unfurnished")
+                .furnishing("Unfurnished")
+                .facing("East")
+                .description("Commercial Space for Sale in Whitefield - One of the most renowned localities for large IT Centers in Bangalore.\n" +
+                        "\n" +
+                        "Seetharampalya Metro Station - 500 meters\n" +
+                        "\n" +
+                        "Bagmane Capital Tech Park - 200 meters\n" +
+                        "\n" +
+                        "Euro School Whitefield - 900 meters\n" +
+                        "\n" +
+                        "Landmark Junction - Kundalahalli Main Road, Hoodi Main Road, and ITPL Road.\n" +
+                        "\n" +
+                        "With rapid growth and current momentum in Bangalore, it has become a nightmare for business owners, founders and CEO's to find a workplace in prime localities for your employees.\n" +
+                        "\n" +
+                        "From metro connectivity to road connectivity, team outing, and weekend getaways, this is a paradise.\n" +
+                        "\n" +
+                        "*Keynote: Split option is available from 1800 square feet")
+                .videoUrl(BASE_URL + "/videos/video_9.mp4")
+                .amenities(Arrays.asList(
+                        "Car Parking",
+                        "Lift",
+                        "Metro Access",
+                        "Staircase"
+                ))
+                .build();
+
 //// ------------------------- PROPERTY 10 -------------------------
 //
 //        Property p10 = Property.builder()
@@ -963,7 +966,7 @@ public class DataInitializer implements CommandLineRunner {
 //                ))
 //                .build();
         repo.saveAll(Arrays.asList(
-                p1, p2, p3, p4, p5, p6, p7, p8
+                p1, p2, p3, p4, p5, p6, p7, p8,p9
 //                p11, p12, p13, p14, p15, p16, p17, p18, p19, p20
         ));
 
