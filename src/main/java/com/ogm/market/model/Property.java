@@ -51,6 +51,8 @@ public class Property {
     @Column(columnDefinition = "TEXT")
     private String description;
     private String videoUrl;
+    private Double latitude;
+    private Double longitude;
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "property_nearby",

@@ -42,4 +42,7 @@ public class PropertyResponse {
     private List<NearbyLocation> nearby;
 
     private String slug;
+
+    private Double latitude;
+    private Double longitude;
 }

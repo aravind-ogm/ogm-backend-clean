@@ -59,6 +59,8 @@ public class PropertyMapper {
                 .soldOut(p.isSoldOut())
 
                 .videoUrl(prefix(p.getVideoUrl()))
+                .latitude(p.getLatitude())
+                .longitude(p.getLongitude())
                 .build();
     }
 
