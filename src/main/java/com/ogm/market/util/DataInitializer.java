@@ -491,7 +491,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Property p9 = Property.builder()
                 .title("7500 sqft Commercial Space in Whitefield")
-                .location("Y @ Whitefield Back gate")
+                .location("Y.Living-Whitefield")
                 .price("N/A")
                 .type("Commercial Space")
                 .sqft("Split option is available from 1800 square feet")
@@ -506,13 +506,15 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p9/property-09-gallery-02.jpg",
                         BASE_URL + "/images/p9/property-09-gallery-03.jpg",
                         BASE_URL + "/images/p9/property-09-gallery-04.jpg",
-                        BASE_URL + "/images/p9/property-09-gallery-05.jpg"
+                        BASE_URL + "/images/p9/property-09-gallery-05.jpg",
+                        BASE_URL + "/images/p9/property-09-gallery-06.jpg",
+                        BASE_URL + "/images/p9/property-09-gallery-07.jpg"
                 ))
                 .bedrooms(String.valueOf("N/A"))
                 .bathrooms(String.valueOf("Central Bathroom Setup"))
                 .carpetArea("N/A")
                 .builtupArea("7500 SQF")
-//                .parking("3 Cars")
+                .parking("Available")
                 .maintenance("Unfurnished")
                 .furnishing("Unfurnished")
                 .facing("East")
