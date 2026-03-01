@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class DataInitializer implements CommandLineRunner {
 
     private final PropertyRepository repo;
-    private static final String BASE_URL = "https://ogm-backend-clean-us-879813720468.us-central1.run.app";
+    private static final String BASE_URL = "https://ogm-backend-clean-879813720468.asia-south1.run.app";
 //    private static final String BASE_URL = "http://localhost:8080";
 
     public DataInitializer(PropertyRepository repo) {
