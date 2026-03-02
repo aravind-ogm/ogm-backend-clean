@@ -7,7 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "properties")
+@Table(
+        name = "properties",
+        indexes = {
+                @Index(name = "idx_property_slug", columnList = "slug"),
+                @Index(name = "idx_property_location", columnList = "location"),
+                @Index(name = "idx_property_type", columnList = "type")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,26 +26,54 @@ public class Property {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
+
     private String location;
+
     private Double price;
+
     private String image;
+
     private String type;
+
     private String sqft;
-    private boolean reraApproved;
-    private boolean soldOut;
+
+    @Builder.Default
+    private boolean reraApproved = false;
+
+    @Builder.Default
+    private boolean soldOut = false;
+
     @Column(name = "brochure_file")
     private String brochureFile;
+
+    @Builder.Default
     @ElementCollection
-    @CollectionTable(name = "property_main_images", joinColumns = @JoinColumn(name = "property_id"))
-    @Column(name = "main_image_url")
-    private List<String> mainImages;
+    @CollectionTable(
+            name = "property_main_images",
+            joinColumns = @JoinColumn(name = "property_id")
+    )
+    @Column(name = "main_image_url", length = 1000)
+    private List<String> mainImages = new ArrayList<>();
+
+
+    @Builder.Default
     @ElementCollection
-    private List<String> amenities;
-    @ElementCollection
-    @CollectionTable(name = "property_images", joinColumns = @JoinColumn(name = "property_id"))
+    @CollectionTable(
+            name = "property_images",
+            joinColumns = @JoinColumn(name = "property_id")
+    )
     @Column(name = "image_url", length = 1000)
     private List<String> images = new ArrayList<>();
+    @Builder.Default
+    @ElementCollection
+    @CollectionTable(
+            name = "property_amenities",
+            joinColumns = @JoinColumn(name = "property_id")
+    )
+    @Column(name = "amenity")
+    private List<String> amenities = new ArrayList<>();
     private String bedrooms;
     private String bathrooms;
     private String carpetArea;
@@ -58,18 +93,21 @@ public class Property {
             name = "property_nearby",
             joinColumns = @JoinColumn(name = "property_id")
     )
-    private List<NearbyLocation> nearby;
+    private List<NearbyLocation> nearby = new ArrayList<>();
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 150)
     private String slug;
 
     @PrePersist
-    public void autoGenerateSlug() {
-        if (this.slug == null || this.slug.isBlank()) {
+    @PreUpdate
+    public void prepareData() {
+        if (this.title != null) {
+            this.title = this.title.trim();
+        }
+        if ((this.slug == null || this.slug.isBlank()) && this.title != null) {
             this.slug = this.title.toLowerCase()
                     .replaceAll("[^a-z0-9]+", "-")
                     .replaceAll("(^-|-$)", "");
         }
     }
-
 }

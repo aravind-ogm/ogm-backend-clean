@@ -1,7 +1,6 @@
 package com.ogm.market.ai;
 
 import com.ogm.market.dto.PropertyResponse;
-import com.ogm.market.service.AISearchService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

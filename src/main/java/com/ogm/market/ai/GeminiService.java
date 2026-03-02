@@ -49,10 +49,10 @@ public class GeminiService {
             // Step 4: Final Prompt
             String finalPrompt = """
                     You are a professional real estate advisor.
-
+                    
                     Available Properties:
                     """ + propertyContext + """
-
+                    
                     User Question:
                     """ + question;
 
@@ -112,7 +112,7 @@ public class GeminiService {
                     Return ONLY valid JSON.
                     Fields:
                     city, location, bhk, maxPrice
-
+                    
                     Query:
                     """ + question;
 

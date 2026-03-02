@@ -1,4 +1,4 @@
-package com.ogm.market.service;
+package com.ogm.market.ai;
 
 import com.ogm.market.dto.PropertyResponse;
 import com.ogm.market.model.Property;
