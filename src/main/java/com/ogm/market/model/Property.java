@@ -12,7 +12,9 @@ import java.util.List;
         indexes = {
                 @Index(name = "idx_property_slug", columnList = "slug"),
                 @Index(name = "idx_property_location", columnList = "location"),
-                @Index(name = "idx_property_type", columnList = "type")
+                @Index(name = "idx_property_type", columnList = "type"),
+                @Index(name = "idx_property_price", columnList = "price"),
+                @Index(name = "idx_property_bedrooms", columnList = "bedrooms")
         }
 )
 @Getter
@@ -26,18 +28,23 @@ public class Property {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 200)
     private String title;
 
+    @Column(length = 150)
     private String location;
 
+    @Column
     private Double price;
 
+    @Column(length = 1000)
     private String image;
 
+    @Column(length = 100)
     private String type;
 
-    private String sqft;
+    // numeric sqft for filtering
+    private Integer sqft;
 
     @Builder.Default
     private boolean reraApproved = false;
@@ -45,9 +52,14 @@ public class Property {
     @Builder.Default
     private boolean soldOut = false;
 
-    @Column(name = "brochure_file")
+    @Column(name = "brochure_file", length = 1000)
     private String brochureFile;
 
+    /*
+     ---------------------------------------------------
+     MAIN IMAGES
+     ---------------------------------------------------
+     */
     @Builder.Default
     @ElementCollection
     @CollectionTable(
@@ -58,6 +70,11 @@ public class Property {
     private List<String> mainImages = new ArrayList<>();
 
 
+    /*
+     ---------------------------------------------------
+     GALLERY IMAGES
+     ---------------------------------------------------
+     */
     @Builder.Default
     @ElementCollection
     @CollectionTable(
@@ -66,6 +83,13 @@ public class Property {
     )
     @Column(name = "image_url", length = 1000)
     private List<String> images = new ArrayList<>();
+
+
+    /*
+     ---------------------------------------------------
+     AMENITIES
+     ---------------------------------------------------
+     */
     @Builder.Default
     @ElementCollection
     @CollectionTable(
@@ -74,20 +98,55 @@ public class Property {
     )
     @Column(name = "amenity")
     private List<String> amenities = new ArrayList<>();
-    private String bedrooms;
-    private String bathrooms;
+
+
+    /*
+     ---------------------------------------------------
+     PROPERTY DETAILS
+     ---------------------------------------------------
+     */
+    private Integer bedrooms;
+
+    private Integer bathrooms;
+
+    @Column(length = 50)
     private String carpetArea;
+
+    @Column(length = 50)
     private String landArea;
+
+    @Column(length = 50)
     private String builtupArea;
+
+    @Column(length = 50)
     private String parking;
+
+    @Column(length = 50)
     private String maintenance;
+
+    @Column(length = 50)
     private String facing;
+
+    @Column(length = 50)
     private String furnishing;
+
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(length = 1000)
     private String videoUrl;
+
     private Double latitude;
+
     private Double longitude;
+
+
+    /*
+     ---------------------------------------------------
+     NEARBY LOCATIONS
+     ---------------------------------------------------
+     */
+    @Builder.Default
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "property_nearby",
@@ -95,19 +154,99 @@ public class Property {
     )
     private List<NearbyLocation> nearby = new ArrayList<>();
 
+
+    /*
+     ---------------------------------------------------
+     SEO SLUG
+     ---------------------------------------------------
+     */
     @Column(unique = true, nullable = false, length = 150)
     private String slug;
 
+
+    /*
+     ---------------------------------------------------
+     AUTO SLUG GENERATION
+     ---------------------------------------------------
+     */
     @PrePersist
     @PreUpdate
     public void prepareData() {
+
         if (this.title != null) {
             this.title = this.title.trim();
         }
+
         if ((this.slug == null || this.slug.isBlank()) && this.title != null) {
             this.slug = this.title.toLowerCase()
                     .replaceAll("[^a-z0-9]+", "-")
                     .replaceAll("(^-|-$)", "");
         }
     }
+
+
+    /*
+     ---------------------------------------------------
+     GOOGLE MAP LINK
+     ---------------------------------------------------
+     */
+    public String getGoogleMapsUrl() {
+
+        if (latitude != null && longitude != null) {
+            return "https://www.google.com/maps?q=" + latitude + "," + longitude;
+        }
+
+        return null;
+    }
+
+
+    /*
+     ---------------------------------------------------
+     PRIMARY IMAGE
+     ---------------------------------------------------
+     */
+    public String getPrimaryImage() {
+
+        if (mainImages != null && !mainImages.isEmpty()) {
+            return mainImages.get(0);
+        }
+
+        if (images != null && !images.isEmpty()) {
+            return images.get(0);
+        }
+
+        return image;
+    }
+
+
+    /*
+     ---------------------------------------------------
+     PRICE FORMATTER
+     ---------------------------------------------------
+     */
+    public String getFormattedPrice() {
+
+        if (price == null) return null;
+
+        if (price >= 10000000) {
+            return String.format("₹%.2f Cr", price / 10000000);
+        }
+
+        if (price >= 100000) {
+            return String.format("₹%.2f L", price / 100000);
+        }
+
+        return "₹" + price;
+    }
+
+
+    /*
+     ---------------------------------------------------
+     AI EMBEDDING VECTOR (pgvector)
+     ---------------------------------------------------
+     */
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "embedding", columnDefinition = "vector(768)")
+    private float[] embedding;
+
 }

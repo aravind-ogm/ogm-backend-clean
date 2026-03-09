@@ -27,7 +27,11 @@ public class PropertyServiceImpl implements PropertyService {
         this.storageBaseUrl = storageBaseUrl;
     }
 
-    // ================= ADVANCED SEARCH =================
+    /*
+     =========================================================
+     ADVANCED SEARCH
+     =========================================================
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PropertyResponse> listProperties(
@@ -36,14 +40,14 @@ public class PropertyServiceImpl implements PropertyService {
             Double minPrice,
             Double maxPrice,
             Boolean rera,
-            String bhk,
+            Integer bhk,
             String facing,
             String furnishing,
             Pageable pageable
     ) {
 
         return repository.advancedSearch(
-                q == null ? null : q.toLowerCase(),
+                q,
                 type,
                 minPrice,
                 maxPrice,
@@ -55,22 +59,36 @@ public class PropertyServiceImpl implements PropertyService {
         ).map(this::toResponse);
     }
 
-    // ================= GET BY ID =================
+
+    /*
+     =========================================================
+     GET PROPERTY BY ID
+     =========================================================
+     */
     @Override
     @Transactional(readOnly = true)
     public PropertyResponse getProperty(Long id) {
+
         Property p = repository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Property not found: " + id)
                 );
+
         return toResponse(p);
     }
 
-    // ================= CREATE =================
+
+    /*
+     =========================================================
+     CREATE PROPERTY
+     =========================================================
+     */
     @Override
     @Transactional
     public PropertyResponse createProperty(PropertyRequest request) {
+
         Property p = new Property();
+
         BeanUtils.copyProperties(request, p);
 
         if (request.getImages() != null) p.setImages(request.getImages());
@@ -81,16 +99,22 @@ public class PropertyServiceImpl implements PropertyService {
         return toResponse(repository.save(p));
     }
 
-    // ================= UPDATE =================
+
+    /*
+     =========================================================
+     UPDATE PROPERTY
+     =========================================================
+     */
     @Override
     @Transactional
     public PropertyResponse updateProperty(Long id, PropertyRequest request) {
+
         Property existing = repository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Property not found: " + id)
                 );
 
-        BeanUtils.copyProperties(request, existing, "id");
+        BeanUtils.copyProperties(request, existing, "id", "slug");
 
         if (request.getImages() != null) existing.setImages(request.getImages());
         if (request.getMainImages() != null) existing.setMainImages(request.getMainImages());
@@ -100,17 +124,29 @@ public class PropertyServiceImpl implements PropertyService {
         return toResponse(repository.save(existing));
     }
 
-    // ================= DELETE =================
+
+    /*
+     =========================================================
+     DELETE PROPERTY
+     =========================================================
+     */
     @Override
     @Transactional
     public void deleteProperty(Long id) {
+
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Property not found: " + id);
         }
+
         repository.deleteById(id);
     }
 
-    // ================= DTO MAPPER =================
+
+    /*
+     =========================================================
+     ENTITY → RESPONSE MAPPER
+     =========================================================
+     */
     private PropertyResponse toResponse(Property p) {
 
         Hibernate.initialize(p.getAmenities());
@@ -122,41 +158,62 @@ public class PropertyServiceImpl implements PropertyService {
                 .id(p.getId())
                 .title(p.getTitle())
                 .location(p.getLocation())
-                .price(String.valueOf(p.getPrice())) // frontend expects String
+                .price(p.getPrice() == null ? null : String.valueOf(p.getPrice()))
                 .slug(p.getSlug())
                 .image(prefix(p.getImage()))
                 .type(p.getType())
                 .sqft(p.getSqft())
                 .reraApproved(p.isReraApproved())
                 .soldOut(p.isSoldOut())
-                .mainImages(p.getMainImages() == null ? null :
-                        p.getMainImages().stream().map(this::prefix).toList())
-                .images(p.getImages() == null ? null :
-                        p.getImages().stream().map(this::prefix).toList())
+
+                .mainImages(
+                        p.getMainImages() == null ? null :
+                                p.getMainImages().stream().map(this::prefix).toList()
+                )
+
+                .images(
+                        p.getImages() == null ? null :
+                                p.getImages().stream().map(this::prefix).toList()
+                )
+
                 .amenities(p.getAmenities())
                 .nearby(p.getNearby())
+
                 .bedrooms(p.getBedrooms())
                 .bathrooms(p.getBathrooms())
+
                 .carpetArea(p.getCarpetArea())
                 .landArea(p.getLandArea())
                 .builtupArea(p.getBuiltupArea())
+
                 .parking(p.getParking())
                 .maintenance(p.getMaintenance())
                 .facing(p.getFacing())
                 .furnishing(p.getFurnishing())
+
                 .description(p.getDescription())
+
                 .videoUrl(prefix(p.getVideoUrl()))
+
                 .build();
     }
 
-    // ================= URL PREFIX =================
+
+    /*
+     =========================================================
+     STORAGE URL PREFIX
+     =========================================================
+     */
     private String prefix(String url) {
+
         if (url == null) return null;
+
         if (url.startsWith("http")) return url;
+
         if (storageBaseUrl == null || storageBaseUrl.isBlank()) return url;
 
-        return url.startsWith("/") ?
-                storageBaseUrl + url :
-                storageBaseUrl + "/" + url;
+        return url.startsWith("/")
+                ? storageBaseUrl + url
+                : storageBaseUrl + "/" + url;
     }
 }

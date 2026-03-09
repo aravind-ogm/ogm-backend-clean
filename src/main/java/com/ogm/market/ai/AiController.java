@@ -1,13 +1,8 @@
 package com.ogm.market.ai;
 
-import com.ogm.market.dto.PropertyResponse;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -24,29 +19,37 @@ public class AiController {
     }
 
     @PostMapping("/ask")
-    public ResponseEntity<AiResponse> askAi(
+    public ResponseEntity<AiChatResponse> askAi(
             @Valid @RequestBody AiRequest request
     ) {
 
         if (request.getQuestion() == null || request.getQuestion().isBlank()) {
             return ResponseEntity.badRequest()
-                    .body(new AiResponse("Question cannot be empty.", null));
+                    .body(
+                            AiChatResponse.builder()
+                                    .message("Question cannot be empty.")
+                                    .hasResults(false)
+                                    .build()
+                    );
         }
 
-        // 1️⃣ Get AI summary
-        String reply = geminiService.askGemini(request.getQuestion());
+        String userQuestion = request.getQuestion();
 
-        // 2️⃣ Search database
-        Page<PropertyResponse> results =
-                aiSearchService.search(
-                        request.getQuestion(),
-                        PageRequest.of(0, 10)
-                );
+        // 1️⃣ Structured property search
+        AiChatResponse searchResponse =
+                aiSearchService.search(userQuestion);
 
-        List<PropertyResponse> properties = results.getContent();
+        // 2️⃣ If properties found, optionally enhance with Gemini summary
+        if (searchResponse.isHasResults()) {
 
-        return ResponseEntity.ok(
-                new AiResponse(reply, properties)
-        );
+            String enhancedMessage = geminiService.askGemini(
+                    "User asked: " + userQuestion +
+                            ". Write a short professional real estate response introducing the matching properties."
+            );
+
+            searchResponse.setMessage(enhancedMessage);
+        }
+
+        return ResponseEntity.ok(searchResponse);
     }
 }

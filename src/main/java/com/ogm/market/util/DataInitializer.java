@@ -27,6 +27,10 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
+        if (repo.count() > 0) {
+            return; // Data already exists, skip initialization
+        }
+
 
 // ------------------------- PROPERTY 1 -------------------------
 
@@ -36,7 +40,7 @@ public class DataInitializer implements CommandLineRunner {
                 .slug(slugify("astro-green-cascade-off-sarjapur-road"))
                 .price(parseIndianPrice("₹ 6.32 Cr"))
                 .type("Residential Villa")
-                .sqft("4300")
+                .sqft(4300)
                 .reraApproved(true)
                 .brochureFile("Astro Green Cascade - Life style Experience Brochure.pdf")
                 .image(BASE_URL + "/images/p1/property-01-main-01.jpg")
@@ -66,12 +70,14 @@ public class DataInitializer implements CommandLineRunner {
                 ))
                 .landArea("2400 sq.ft - ")
                 .maintenance("N/A")
-                .bedrooms("4 -")
-                .bathrooms("4 -")
+                .bedrooms(4)
+                .bathrooms(4)
                 .builtupArea("4300 sq.ft")
                 .parking("3 Cars")
                 .furnishing("Unfurnished")
                 .facing("East")
+                .latitude(12.8678)
+                .longitude(77.7346)
                 .description("A home with walls is just a home, but a home full of life and experience is a castle. Project Chief represents character; it gives a breathtaking luxury life with a uniquely styled exterior build and interior mastery of class. With 14mm-thick laminated glass doors covering the outer walls, in continuation with the foldable windows beneath them, it’s a place wrapped in glass of class. From clay cladding walls to Italian marble floors and an extravagant staircase, it has the true personality of a king and the heart of a queen.")
                 .videoUrl(BASE_URL + "/images/p1/property-01-video-01.mp4")
                 .amenities(Arrays.asList(
@@ -120,7 +126,7 @@ public class DataInitializer implements CommandLineRunner {
                 .location("Kasavanhalli , Bengaluru, ( Near hsr layout )")
                 .price(parseIndianPrice("₹1.25 Cr"))
                 .type("Residential Building")
-                .sqft("1569")
+                .sqft(1569)
                 .reraApproved(true)
                 .brochureFile("property-2.pdf")
                 .image(BASE_URL + "/images/p2/property-02-main-01.jpeg")
@@ -143,8 +149,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p2/property-02-gallery-11.jpeg",
                         BASE_URL + "/images/p2/property-02-gallery-12.jpeg"
                 ))
-                .bedrooms("5")
-                .bathrooms("5")
+                .bedrooms(5)
+                .bathrooms(5)
                 .carpetArea("N/A")
                 .builtupArea("1569 sq.ft")
                 .parking("Ground Floor Car Parking")
@@ -169,7 +175,7 @@ public class DataInitializer implements CommandLineRunner {
                 .location("Junnasandra, Near Old Wipro Gate, Bengaluru")
                 .price(parseIndianPrice("₹40 Lakhs"))
                 .type("Residential Building")
-                .sqft("1100")
+                .sqft(1100)
                 .reraApproved(true)
                 .soldOut(true)
                 .image(BASE_URL + "/images/p3/property-03-main-01.jpg")
@@ -190,8 +196,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p3/property-03-gallery-10.jpg",
                         BASE_URL + "/images/p3/property-03-gallery-11.jpg"
                 ))
-                .bedrooms("3")
-                .bathrooms("3")
+                .bedrooms(3)
+                .bathrooms(3)
                 .carpetArea("1100 sq.ft")
                 .builtupArea("1100 sq.ft")
                 .parking("2 Cars")
@@ -214,7 +220,7 @@ public class DataInitializer implements CommandLineRunner {
                 .location("Sobha Dream Acres, Varthur, Bengaluru")
                 .price(parseIndianPrice("₹75.5 Lakhs"))
                 .type("Large Community Building")
-                .sqft("1012")
+                .sqft(1012)
                 .reraApproved(true)
                 .soldOut(true)
                 .image(BASE_URL + "/images/p4/property-04-main-01.jpg")
@@ -232,8 +238,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p4/property-04-gallery-07.jpg",
                         BASE_URL + "/images/p4/property-04-gallery-08.jpg"
                 ))
-                .bedrooms("2")
-                .bathrooms("2")
+                .bedrooms(2)
+                .bathrooms(2)
                 .carpetArea("N/A")
                 .builtupArea("N/A")
                 .parking("N/A")
@@ -275,7 +281,7 @@ public class DataInitializer implements CommandLineRunner {
                 .location("Palacode, Nariyanahalli, Tamil Nadu – 636808")
                 .price(parseIndianPrice("1.25 Cr to 2.5 Cr"))
                 .type("2 & 3 BHK Weekend Villas")
-                .sqft("620")
+                .sqft(620)
                 .reraApproved(false)
                 .image(BASE_URL + "/images/p5/property-05-main-01.png")
                 .mainImages(Arrays.asList(
@@ -289,8 +295,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p5/property-05-gallery-04.png",
                         BASE_URL + "/images/p5/property-05-gallery-05.png"
                 ))
-                .bedrooms("2")
-                .bathrooms("1")
+                .bedrooms(2)
+                .bathrooms(1)
                 .carpetArea("480 sq.ft")
                 .builtupArea("10k sqft to 20k sqft plots")
                 .parking("1 Car")
@@ -328,7 +334,7 @@ public class DataInitializer implements CommandLineRunner {
                 .location("Maruti Akrida , Bidaraguppe, Mallenahalli, Bangalore, Karnataka 562107")
                 .price(parseIndianPrice("₹81 Lakh to ₹1.98 Crore"))
                 .type("Residential Apartment")
-                .sqft("5200")
+                .sqft(5200)
                 .reraApproved(true)
                 .image(BASE_URL + "/images/p6/property-06-main-01.jpeg")
                 .mainImages(Arrays.asList(
@@ -341,8 +347,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p6/property-06-gallery-03.jpeg",
                         BASE_URL + "/images/p6/property-06-gallery-04.jpeg"
                 ))
-                .bedrooms("5")
-                .bathrooms("6")
+                .bedrooms(5)
+                .bathrooms(6)
                 .carpetArea("3800 sq.ft")
                 .builtupArea("1098 – 2390 sq.ft")
                 .parking("3 Cars")
@@ -371,7 +377,7 @@ public class DataInitializer implements CommandLineRunner {
                 .location("Bagalur - Sarjapur Rd, Hosur, Tamil Nadu 635103")
                 .price(parseIndianPrice("₹1.5 Cr – ₹2.0 Cr"))
                 .type("Independent Villa")
-                .sqft("1760")
+                .sqft(1760)
                 .reraApproved(false)
                 .image(BASE_URL + "/images/p7/property-07-main-01.jpeg")
                 .mainImages(Arrays.asList(
@@ -391,8 +397,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p7/property-07-gallery-10.jpeg",
                         BASE_URL + "/images/p7/property-07-gallery-11.jpeg"
                 ))
-                .bedrooms("3")
-                .bathrooms("3")
+                .bedrooms(3)
+                .bathrooms(3)
                 .carpetArea("1280 sq.ft")
                 .builtupArea("1500 – 3000 sq.ft")
                 .parking("2 Cars")
@@ -441,7 +447,7 @@ public class DataInitializer implements CommandLineRunner {
                 .location("Brigade Orchards, Devanahalli, Bengaluru")
                 .price(parseIndianPrice("₹95 Lakhs"))
                 .type("Plot")
-                .sqft("2400")
+                .sqft(2400)
                 .reraApproved(true)
                 .image(BASE_URL + "/images/p8/property-08-main-01.jpeg")
                 .mainImages(Arrays.asList(
@@ -455,8 +461,8 @@ public class DataInitializer implements CommandLineRunner {
                         BASE_URL + "/images/p8/property-08-gallery-04.jpeg",
                         BASE_URL + "/images/p8/property-08-gallery-05.jpeg"
                 ))
-                .bedrooms("0")
-                .bathrooms("0")
+                .bedrooms(0)
+                .bathrooms(0)
                 .carpetArea("N/A")
                 .builtupArea("N/A")
                 .parking("N/A")

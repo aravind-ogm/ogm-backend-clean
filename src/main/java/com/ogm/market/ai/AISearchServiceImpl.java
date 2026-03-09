@@ -1,86 +1,147 @@
 package com.ogm.market.ai;
 
-import com.ogm.market.dto.PropertyResponse;
 import com.ogm.market.model.Property;
 import com.ogm.market.repository.PropertyRepository;
-import com.ogm.market.util.PropertyMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class AISearchServiceImpl implements AISearchService {
 
+    private static final int MAX_RESULTS = 5;
+
     private final PropertyRepository repository;
-    private final PropertyMapper mapper;
+    private final EmbeddingService embeddingService;
 
     public AISearchServiceImpl(PropertyRepository repository,
-                               PropertyMapper mapper) {
+                               EmbeddingService embeddingService) {
         this.repository = repository;
-        this.mapper = mapper;
+        this.embeddingService = embeddingService;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<PropertyResponse> search(String prompt, Pageable pageable) {
+    public AiChatResponse search(String prompt) {
 
         if (prompt == null || prompt.isBlank()) {
-            return Page.empty(pageable);
+            return emptyResponse("Please tell me what kind of property you're looking for.");
         }
 
-        String lowerPrompt = prompt.toLowerCase();
+        String query = prompt.toLowerCase();
 
-        // Extract filters
-        Integer bhkInt = extractBhk(lowerPrompt);
-        String bhk = bhkInt != null ? String.valueOf(bhkInt) : null;
+        Integer bhk = extractBhk(query);
+        Double maxPrice = extractPrice(query);
+        String location = extractLocation(query);
 
-        String location = extractLocation(lowerPrompt);
-        String type = extractType(lowerPrompt);
+        List<Double> vector = embeddingService.generateEmbedding(prompt);
 
-        // Prefer location if detected
-        String searchText = location != null ? location : lowerPrompt;
+        String pgVector = toPgVector(vector);
 
-        Page<Property> page = repository.advancedSearch(
-                searchText,
-                type,
-                null,
-                null,
-                null,
+        List<Property> properties = repository.hybridSearch(
+                pgVector,
+                location,
                 bhk,
-                null,
-                null,
-                pageable
+                maxPrice,
+                MAX_RESULTS
         );
 
-        return page.map(mapper::toResponse);
+        if (properties.isEmpty()) {
+            return emptyResponse("I couldn't find matching properties. Try adjusting budget or location.");
+        }
+
+        List<PropertyCardResponse> cards = properties.stream()
+                .map(this::toCard)
+                .collect(Collectors.toList());
+
+        return AiChatResponse.builder()
+                .message("Here are the best matches I found:")
+                .properties(cards)
+                .hasResults(true)
+                .build();
     }
 
-    /* ================= AI PARSERS ================= */
+    private String toPgVector(List<Double> vector) {
+        return "[" + vector.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(",")) + "]";
+    }
 
-    private Integer extractBhk(String q) {
-        if (q.contains("1 bhk")) return 1;
-        if (q.contains("2 bhk")) return 2;
-        if (q.contains("3 bhk")) return 3;
-        if (q.contains("4 bhk")) return 4;
+    private Integer extractBhk(String query) {
+        Pattern pattern = Pattern.compile("(\\d+)\\s*bhk");
+        Matcher matcher = pattern.matcher(query);
+
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
         return null;
     }
 
-    private String extractLocation(String q) {
-        if (q.contains("sarjapur")) return "sarjapur";
-        if (q.contains("electronic city")) return "electronic city";
-        if (q.contains("whitefield")) return "whitefield";
-        if (q.contains("bellandur")) return "bellandur";
-        if (q.contains("kasavanahalli")) return "kasavanahalli";
-        if (q.contains("junnasandra")) return "junnasandra";
-        if (q.contains("varthur")) return "varthur";
+    private Double extractPrice(String query) {
+
+        Pattern crore = Pattern.compile("(\\d+(\\.\\d+)?)\\s*cr");
+        Matcher crMatch = crore.matcher(query);
+
+        if (crMatch.find()) {
+            return Double.parseDouble(crMatch.group(1)) * 10000000;
+        }
+
+        Pattern lakh = Pattern.compile("(\\d+(\\.\\d+)?)\\s*lakh");
+        Matcher lakhMatch = lakh.matcher(query);
+
+        if (lakhMatch.find()) {
+            return Double.parseDouble(lakhMatch.group(1)) * 100000;
+        }
+
         return null;
     }
 
-    private String extractType(String q) {
-        if (q.contains("villa")) return "villa";
-        if (q.contains("plot")) return "plot";
-        if (q.contains("apartment")) return "apartment";
-        return null; // don't force filter
+    private String extractLocation(String query) {
+
+        String[] locations = {
+                "sarjapur",
+                "whitefield",
+                "electronic city",
+                "bellandur",
+                "varthur",
+                "marathahalli"
+        };
+
+        for (String loc : locations) {
+            if (query.contains(loc)) {
+                return loc;
+            }
+        }
+
+        return null;
+    }
+
+    private AiChatResponse emptyResponse(String message) {
+        return AiChatResponse.builder()
+                .message(message)
+                .hasResults(false)
+                .properties(List.of())
+                .build();
+    }
+
+    private PropertyCardResponse toCard(Property p) {
+        return PropertyCardResponse.builder()
+                .type("property_card")
+                .id(p.getId())
+                .title(p.getTitle())
+                .price(p.getFormattedPrice())
+                .location(p.getLocation())
+                .sqft(p.getSqft())
+                .primaryImage(p.getPrimaryImage())
+                .gallery(p.getImages())
+                .latitude(p.getLatitude())
+                .longitude(p.getLongitude())
+                .googleMapsUrl(p.getGoogleMapsUrl())
+                .reraApproved(p.isReraApproved())
+                .soldOut(p.isSoldOut())
+                .slug(p.getSlug())
+                .build();
     }
 }

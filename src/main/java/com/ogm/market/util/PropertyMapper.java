@@ -6,7 +6,8 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class PropertyMapper {
@@ -16,7 +17,11 @@ public class PropertyMapper {
 
     public PropertyResponse toResponse(Property p) {
 
-        // ✅ FORCE INITIALIZATION of lazy collections
+        if (p == null) {
+            return null;
+        }
+
+        // Ensure lazy collections are initialized
         Hibernate.initialize(p.getImages());
         Hibernate.initialize(p.getMainImages());
         Hibernate.initialize(p.getAmenities());
@@ -26,7 +31,7 @@ public class PropertyMapper {
                 .id(p.getId())
                 .title(p.getTitle())
                 .location(p.getLocation())
-                .price(String.valueOf(p.getPrice()))
+                .price(p.getPrice() == null ? null : String.valueOf(p.getPrice()))
                 .type(p.getType())
                 .sqft(p.getSqft())
 
@@ -37,18 +42,11 @@ public class PropertyMapper {
 
                 .image(prefix(p.getImage()))
 
-                .images(p.getImages() == null ? null :
-                        p.getImages().stream()
-                                .map(this::prefix)
-                                .collect(Collectors.toList()))
+                .images(mapUrls(p.getImages()))
+                .mainImages(mapUrls(p.getMainImages()))
 
-                .mainImages(p.getMainImages() == null ? null :
-                        p.getMainImages().stream()
-                                .map(this::prefix)
-                                .collect(Collectors.toList()))
-
-                .amenities(p.getAmenities())
-                .nearby(p.getNearby())
+                .amenities(p.getAmenities() == null ? Collections.emptyList() : p.getAmenities())
+                .nearby(p.getNearby() == null ? Collections.emptyList() : p.getNearby())
 
                 .facing(p.getFacing())
                 .furnishing(p.getFurnishing())
@@ -61,12 +59,36 @@ public class PropertyMapper {
                 .videoUrl(prefix(p.getVideoUrl()))
                 .latitude(p.getLatitude())
                 .longitude(p.getLongitude())
+
                 .build();
     }
 
-    private String prefix(String url) {
-        if (url == null || url.isBlank()) return null;
-        if (url.startsWith("http")) return url;
-        return storageBaseUrl + (url.startsWith("/") ? url : "/" + url);
+    private List<String> mapUrls(List<String> urls) {
+
+        if (urls == null || urls.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return urls.stream()
+                .map(this::prefix)
+                .toList();
     }
+
+    private String prefix(String url) {
+
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+
+        if (url.startsWith("http")) {
+            return url;
+        }
+
+        if (url.startsWith("/")) {
+            return storageBaseUrl + url;
+        }
+
+        return storageBaseUrl + "/" + url;
+    }
+
 }

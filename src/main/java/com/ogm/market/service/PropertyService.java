@@ -13,7 +13,7 @@ public interface PropertyService {
             Double minPrice,
             Double maxPrice,
             Boolean rera,
-            String bhk,
+            Integer bhk,
             String facing,
             String furnishing,
             Pageable pageable
