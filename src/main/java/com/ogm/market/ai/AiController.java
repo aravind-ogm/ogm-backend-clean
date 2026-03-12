@@ -148,7 +148,7 @@ public class AiController {
         StringBuilder prompt = new StringBuilder();
 
         prompt.append("""
-                You are a professional real estate advisor for One Global Marketplace (OGM), 
+                You are a Virtual real estate advisor for One Global Marketplace (OGM), 
                 a premium property platform in India.
                 
                 RULES:

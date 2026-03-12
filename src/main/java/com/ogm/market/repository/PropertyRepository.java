@@ -24,7 +24,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                 p.location ILIKE CONCAT('%', CAST(:q AS TEXT), '%') OR
                 p.description ILIKE CONCAT('%', CAST(:q AS TEXT), '%')
             )
-        AND (:type IS NULL OR p.type ILIKE CAST(:type AS TEXT))
+        AND (:type IS NULL OR p.type ILIKE CONCAT('%', CAST(:type AS TEXT), '%'))
         AND (:minPrice IS NULL OR p.price >= CAST(:minPrice AS DOUBLE PRECISION))
         AND (:maxPrice IS NULL OR p.price <= CAST(:maxPrice AS DOUBLE PRECISION))
         AND (:rera IS NULL OR p.rera_approved = CAST(:rera AS BOOLEAN))
@@ -41,7 +41,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                 p.location ILIKE CONCAT('%', CAST(:q AS TEXT), '%') OR
                 p.description ILIKE CONCAT('%', CAST(:q AS TEXT), '%')
             )
-        AND (:type IS NULL OR p.type ILIKE CAST(:type AS TEXT))
+        AND (:type IS NULL OR p.type ILIKE CONCAT('%', CAST(:type AS TEXT), '%'))
         AND (:minPrice IS NULL OR p.price >= CAST(:minPrice AS DOUBLE PRECISION))
         AND (:maxPrice IS NULL OR p.price <= CAST(:maxPrice AS DOUBLE PRECISION))
         AND (:rera IS NULL OR p.rera_approved = CAST(:rera AS BOOLEAN))
@@ -83,7 +83,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     );
 
 
-    // ================= HYBRID AI SEARCH =================
+    // ================= HYBRID AI SEARCH (with type filter) =================
     @Query(value = """
     SELECT *
     FROM properties
@@ -91,6 +91,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         (:location IS NULL OR location ILIKE CONCAT('%', CAST(:location AS TEXT), '%'))
     AND (:bhk IS NULL OR bedrooms = CAST(:bhk AS INTEGER))
     AND (:maxPrice IS NULL OR price <= CAST(:maxPrice AS DOUBLE PRECISION))
+    AND (:type IS NULL OR type ILIKE CONCAT('%', CAST(:type AS TEXT), '%'))
     ORDER BY embedding <-> CAST(:embedding AS vector)
     LIMIT :limit
     """, nativeQuery = true)
@@ -99,6 +100,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             @Param("location") String location,
             @Param("bhk") Integer bhk,
             @Param("maxPrice") Double maxPrice,
+            @Param("type") String type,
             @Param("limit") int limit
     );
 

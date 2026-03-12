@@ -40,34 +40,38 @@ public class AISearchServiceImpl implements AISearchService {
 
         String query = prompt.toLowerCase().trim();
 
-        // ── Extract structured filters ──
+        // ── Extract ALL structured filters ──
         Integer bhk = extractBhk(query);
         Double maxPrice = extractMaxPrice(query);
         Double minPrice = extractMinPrice(query);
         String location = extractLocation(query);
+        String propertyType = extractPropertyType(query);
+        Boolean rera = extractRera(query);
 
-        log.info("AI Search — query: '{}', bhk: {}, maxPrice: {}, location: '{}'",
-                query, bhk, maxPrice, location);
+        log.info("AI Search — query: '{}', type: '{}', bhk: {}, maxPrice: {}, location: '{}'",
+                query, propertyType, bhk, maxPrice, location);
 
         // ── Search Strategy: try in order, stop when results found ──
         List<Property> results = Collections.emptyList();
 
         // 1. Hybrid search (vector + filters) — best quality
         if (results.isEmpty()) {
-            results = tryHybridSearch(prompt, location, bhk, maxPrice);
+            results = tryHybridSearch(prompt, location, bhk, maxPrice, propertyType);
         }
 
-        // 2. Advanced text search with filters
+        // 2. Advanced text search with ALL extracted filters including type
         if (results.isEmpty()) {
-            results = tryAdvancedSearch(query, null, minPrice, maxPrice, null, bhk, null, null);
+            results = tryAdvancedSearch(query, propertyType, minPrice, maxPrice, rera, bhk, null, null);
         }
 
         // 3. Simple location + price fallback
         if (results.isEmpty() && location != null) {
             try {
-                results = repository.findByLocationContainingIgnoreCaseAndPriceLessThanEqual(
+                List<Property> locationResults = repository.findByLocationContainingIgnoreCaseAndPriceLessThanEqual(
                         location, maxPrice != null ? maxPrice : Double.MAX_VALUE
                 );
+                // Still filter by type
+                results = filterByType(locationResults, propertyType);
             } catch (Exception e) {
                 log.warn("Simple search failed: {}", e.getMessage());
             }
@@ -75,15 +79,17 @@ public class AISearchServiceImpl implements AISearchService {
 
         // 4. Pure semantic search — ONLY if user provided specific terms
         if (results.isEmpty() && hasSpecificSearchTerms(query)) {
-            results = trySemanticSearch(prompt);
+            List<Property> semanticResults = trySemanticSearch(prompt);
+            results = filterByType(semanticResults, propertyType);
         }
 
         // ── NO random fallback! If nothing matches, say so. ──
         if (results.isEmpty()) {
+            String typeHint = propertyType != null ? propertyType + "s" : "properties";
             return emptyResponse(
-                    "I couldn't find properties matching your criteria. " +
-                            "Try adjusting your budget, location, or BHK. " +
-                            "For example: \"2 BHK in Whitefield under 1 Cr\""
+                    "I couldn't find " + typeHint + " matching your criteria. " +
+                            "Try adjusting your budget or location. " +
+                            "For example: \"villa in Sarjapur under 2 Cr\""
             );
         }
 
@@ -108,15 +114,15 @@ public class AISearchServiceImpl implements AISearchService {
        ═══════════════════════════════════════ */
 
     private List<Property> tryHybridSearch(String prompt, String location,
-                                           Integer bhk, Double maxPrice) {
+                                           Integer bhk, Double maxPrice, String propertyType) {
         try {
             List<Double> vector = embeddingService.generateEmbedding(prompt);
             String pgVector = toPgVector(vector);
             List<Property> results = repository.hybridSearch(
-                    pgVector, location, bhk, maxPrice, MAX_RESULTS
+                    pgVector, location, bhk, maxPrice, propertyType, MAX_RESULTS * 2 // fetch extra, then filter
             );
-            // Filter out irrelevant results — semantic search can return noise
-            return filterRelevant(results, location, bhk, maxPrice);
+            // Post-filter by ALL criteria including type
+            return filterRelevant(results, location, bhk, maxPrice, propertyType);
         } catch (Exception e) {
             log.warn("Hybrid search failed: {}", e.getMessage());
             return Collections.emptyList();
@@ -148,30 +154,88 @@ public class AISearchServiceImpl implements AISearchService {
     }
 
     /**
-     * Post-filter: remove results that clearly don't match user criteria.
-     * Prevents returning a villa when user asked for 2 BHK flat.
+     * Post-filter: remove results that don't match user criteria.
+     * Critical for preventing "asked villa, got flat" issues.
      */
-    private List<Property> filterRelevant(List<Property> results,
-                                          String location, Integer bhk, Double maxPrice) {
+    private List<Property> filterRelevant(List<Property> results, String location,
+                                          Integer bhk, Double maxPrice, String propertyType) {
         if (results == null || results.isEmpty()) return results;
 
         return results.stream()
                 .filter(p -> {
-                    // If user specified BHK, property must match (or be null)
+                    // TYPE CHECK — most important filter
+                    if (propertyType != null && p.getType() != null) {
+                        if (!matchesType(p.getType(), propertyType)) {
+                            return false;
+                        }
+                    }
+                    // BHK check
                     if (bhk != null && p.getBedrooms() != null && !p.getBedrooms().equals(bhk)) {
                         return false;
                     }
-                    // If user specified max price, property must be within range
+                    // Price check (10% tolerance)
                     if (maxPrice != null && p.getPrice() != null && p.getPrice() > maxPrice * 1.1) {
-                        return false; // 10% tolerance
+                        return false;
                     }
-                    // If user specified location, property must contain it
+                    // Location check
                     if (location != null && p.getLocation() != null) {
-                        return p.getLocation().toLowerCase().contains(location.toLowerCase());
+                        if (!p.getLocation().toLowerCase().contains(location.toLowerCase())) {
+                            return false;
+                        }
                     }
                     return true;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Filter only by property type — used when other search methods don't support type param
+     */
+    private List<Property> filterByType(List<Property> results, String propertyType) {
+        if (propertyType == null || results == null || results.isEmpty()) return results;
+
+        return results.stream()
+                .filter(p -> p.getType() == null || matchesType(p.getType(), propertyType))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Smart type matching — "villa" matches "Residential Villa", "Villa Project", etc.
+     */
+    private boolean matchesType(String propertyTypeField, String requestedType) {
+        String actual = propertyTypeField.toLowerCase();
+        String wanted = requestedType.toLowerCase();
+
+        // Direct match
+        if (actual.contains(wanted)) return true;
+
+        // Synonym matching
+        switch (wanted) {
+            case "villa":
+                return actual.contains("villa") || actual.contains("bungalow") ||
+                        actual.contains("independent house") || actual.contains("row house");
+            case "apartment":
+            case "flat":
+                return actual.contains("apartment") || actual.contains("flat") ||
+                        actual.contains("residential building") || actual.contains("condo");
+            case "plot":
+            case "land":
+                return actual.contains("plot") || actual.contains("land") || actual.contains("site");
+            case "commercial":
+                return actual.contains("commercial") || actual.contains("office") ||
+                        actual.contains("shop") || actual.contains("retail");
+            case "penthouse":
+                return actual.contains("penthouse");
+            case "duplex":
+                return actual.contains("duplex");
+            case "farmhouse":
+                return actual.contains("farm");
+            case "holiday":
+                return actual.contains("holiday") || actual.contains("vacation") ||
+                        actual.contains("resort");
+            default:
+                return actual.contains(wanted);
+        }
     }
 
     /**
@@ -263,6 +327,28 @@ public class AISearchServiceImpl implements AISearchService {
         }
 
         return bestMatch;
+    }
+
+    private String extractPropertyType(String query) {
+        if (query.contains("villa") || query.contains("villas")) return "villa";
+        if (query.contains("apartment") || query.contains("apartments")) return "apartment";
+        if (query.contains("flat") || query.contains("flats")) return "flat";
+        if (query.contains("plot") || query.contains("plots") || query.contains("site")) return "plot";
+        if (query.contains("land")) return "land";
+        if (query.contains("penthouse")) return "penthouse";
+        if (query.contains("duplex")) return "duplex";
+        if (query.contains("row house") || query.contains("rowhouse")) return "villa";
+        if (query.contains("bungalow")) return "villa";
+        if (query.contains("farmhouse") || query.contains("farm house")) return "farmhouse";
+        if (query.contains("commercial") || query.contains("office") || query.contains("shop")) return "commercial";
+        if (query.contains("holiday") || query.contains("vacation")) return "holiday";
+        if (query.contains("independent house")) return "villa";
+        return null;
+    }
+
+    private Boolean extractRera(String query) {
+        if (query.contains("rera")) return true;
+        return null;
     }
 
     /* ═══════════════════════════════════════
