@@ -1,21 +1,40 @@
 package com.ogm.market.ai;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+/**
+ * Structured filters extracted from user's natural language query
+ * by Gemini. Used to build the database search query.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AiFilter {
 
     private String city;
     private String location;
-    private String bhk;
+    private String bhk;           // e.g. "2", "3"
+    private Double minPrice;
     private Double maxPrice;
+    private String type;          // e.g. "villa", "apartment", "plot"
+    private String facing;
+    private String furnishing;
+    private Boolean reraApproved;
+    private String keyword;       // fallback search term
 
-    public String getCity() { return city; }
-    public void setCity(String city) { this.city = city; }
-
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-
-    public String getBhk() { return bhk; }
-    public void setBhk(String bhk) { this.bhk = bhk; }
-
-    public Double getMaxPrice() { return maxPrice; }
-    public void setMaxPrice(Double maxPrice) { this.maxPrice = maxPrice; }
+    /**
+     * Parse BHK string to Integer safely
+     */
+    public Integer getBhkAsInteger() {
+        if (bhk == null || bhk.isBlank()) return null;
+        try {
+            return Integer.parseInt(bhk.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

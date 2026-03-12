@@ -9,23 +9,36 @@ import java.util.List;
 @Builder
 public class PropertyCardResponse {
 
-    private String type;   // Always "property_card"
-
     private Long id;
     private String title;
     private String price;
     private String location;
-    private Integer sqft;
 
+    // ── Property details ──
+    private String type;
+    private Integer sqft;
+    private Integer bedrooms;
+    private Integer bathrooms;
+    private String facing;
+    private String furnishing;
+    private String description;
+
+    // ── Images ──
     private String primaryImage;
     private List<String> gallery;
 
+    // ── Location / Map ──
     private Double latitude;
     private Double longitude;
     private String googleMapsUrl;
 
+    // ── Status ──
     private boolean reraApproved;
     private boolean soldOut;
 
+    // ── Amenities ──
+    private List<String> amenities;
+
+    // ── Navigation ──
     private String slug;
 }

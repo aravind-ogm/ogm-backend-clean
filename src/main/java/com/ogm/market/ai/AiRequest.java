@@ -1,17 +1,14 @@
 package com.ogm.market.ai;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
+@Data
 public class AiRequest {
 
-    @NotBlank
+    @NotBlank(message = "Question cannot be empty")
     private String question;
 
-    public String getQuestion() {
-        return question;
-    }
-
-    public void setQuestion(String question) {
-        this.question = question;
-    }
+    /** Optional — for chat history persistence */
+    private String chatId;
 }

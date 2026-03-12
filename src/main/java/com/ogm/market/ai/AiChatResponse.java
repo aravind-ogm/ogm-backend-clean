@@ -9,8 +9,11 @@ import java.util.List;
 @Builder
 public class AiChatResponse {
 
-    private String message;              // Conversational AI text
-    private List<PropertyCardResponse> properties;  // Structured property cards
-    private boolean hasResults;          // Frontend rendering control
+    private String message;
+    private List<PropertyCardResponse> properties;
+    private boolean hasResults;
 
+    /** Follow-up suggestions shown as clickable chips in frontend */
+    @Builder.Default
+    private List<String> followUps = List.of();
 }
