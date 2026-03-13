@@ -14,7 +14,6 @@ public class PropertyCardResponse {
     private String price;
     private String location;
 
-    // ── Property details ──
     private String type;
     private Integer sqft;
     private Integer bedrooms;
@@ -23,22 +22,18 @@ public class PropertyCardResponse {
     private String furnishing;
     private String description;
 
-    // ── Images ──
     private String primaryImage;
     private List<String> gallery;
 
-    // ── Location / Map ──
     private Double latitude;
     private Double longitude;
     private String googleMapsUrl;
 
-    // ── Status ──
     private boolean reraApproved;
     private boolean soldOut;
 
-    // ── Amenities ──
     private List<String> amenities;
+    private List<String> highlights;
 
-    // ── Navigation ──
     private String slug;
 }
