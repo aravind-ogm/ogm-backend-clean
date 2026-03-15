@@ -11,7 +11,6 @@ import com.ogm.market.service.EmailService;
 import com.ogm.market.service.PropertyService;
 import com.ogm.market.service.StorageService;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
+
 @RestController
 @RequestMapping("/api")
 public class PropertyController {
@@ -39,7 +39,6 @@ public class PropertyController {
     private final PropertyService propertyService;
     private final StorageService storageService;
     private final PropertyRepository propertyRepository;
-
     private final String backendUrl;
 
     public PropertyController(
@@ -48,8 +47,7 @@ public class PropertyController {
             PropertyService propertyService,
             StorageService storageService,
             PropertyRepository propertyRepository,
-            @Value("${backend.url:}") String backendUrl
-    ) {
+            @Value("${backend.url:}") String backendUrl) {
         this.brochureService = brochureService;
         this.emailService = emailService;
         this.propertyService = propertyService;
@@ -58,109 +56,71 @@ public class PropertyController {
         this.backendUrl = backendUrl;
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  BROCHURE
+    // ─────────────────────────────────────────────────────────────────────────
 
-    /*
-     =========================================================
-     BROCHURE REQUEST
-     =========================================================
-     */
     @PostMapping("/brochure/request")
     public ResponseEntity<?> requestBrochure(@RequestBody BrochureRequest req) {
+        log.info("Brochure request for property {}", req.getPropertyId());
 
-        log.info("Brochure request received for property {}", req.getPropertyId());
-
-        if (req.getName() == null || req.getName().isBlank()) {
+        if (req.getName() == null || req.getName().isBlank())
             return ResponseEntity.badRequest().body(Map.of("error", "Name required"));
-        }
-
-        if (req.getMobile() == null || req.getMobile().isBlank()) {
+        if (req.getMobile() == null || req.getMobile().isBlank())
             return ResponseEntity.badRequest().body(Map.of("error", "Mobile required"));
-        }
 
         Property property = propertyRepository.findById(req.getPropertyId()).orElse(null);
-
-        if (property == null) {
+        if (property == null)
             return ResponseEntity.badRequest().body(Map.of("error", "Property not found"));
-        }
 
         String brochureFile = property.getBrochureFile();
-
-        if (brochureFile == null || brochureFile.isBlank()) {
+        if (brochureFile == null || brochureFile.isBlank())
             return ResponseEntity.badRequest().body(Map.of("error", "Brochure not available"));
-        }
 
-        if (!brochureService.brochureExists(brochureFile)) {
+        if (!brochureService.brochureExists(brochureFile))
             return ResponseEntity.status(404).body(Map.of("error", "Brochure missing on server"));
-        }
 
         brochureService.recordRequest(req);
-
         String downloadUrl = backendUrl + "/api/brochure/download?file=" + brochureFile;
-
         return ResponseEntity.ok(Map.of("url", downloadUrl));
     }
 
-
-    /*
-     =========================================================
-     DOWNLOAD BROCHURE
-     =========================================================
-     */
     @GetMapping("/brochure/download")
     public ResponseEntity<?> downloadBrochure(@RequestParam("file") String file) {
-
         try {
-
             InputStreamResource resource =
                     new InputStreamResource(brochureService.getBrochureStream(file));
-
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Disposition", "attachment; filename=\"" + file + "\"");
-
             return ResponseEntity.ok()
                     .headers(headers)
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(resource);
-
         } catch (Exception e) {
-
-            log.error("Brochure download failed {}", file);
-
-            return ResponseEntity.status(404)
-                    .body(Map.of("error", "Brochure not found"));
+            log.error("Brochure download failed: {}", file);
+            return ResponseEntity.status(404).body(Map.of("error", "Brochure not found"));
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  CONTACT
+    // ─────────────────────────────────────────────────────────────────────────
 
-    /*
-     =========================================================
-     CONTACT FORM
-     =========================================================
-     */
     @PostMapping("/contact/send")
     public ResponseEntity<String> sendMessage(@RequestBody ContactForm form) {
-
         try {
-
             emailService.sendContactEmail(form);
-
             return ResponseEntity.ok("Email sent successfully");
-
         } catch (MessagingException ex) {
-
-            log.error("Email failed {}", ex.getMessage());
-
-            return ResponseEntity.status(500)
-                    .body("Failed to send email");
+            log.error("Contact email failed: {}", ex.getMessage());
+            return ResponseEntity.status(500).body("Failed to send email");
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  PROPERTY SEARCH & CRUD
+    // ─────────────────────────────────────────────────────────────────────────
 
-    /*
-     =========================================================
-     PROPERTY SEARCH
-     =========================================================
-     */
     @GetMapping("/properties")
     public Page<PropertyResponse> search(
             @RequestParam(required = false) String q,
@@ -171,151 +131,61 @@ public class PropertyController {
             @RequestParam(required = false) Integer bhk,
             @RequestParam(required = false) String facing,
             @RequestParam(required = false) String furnishing,
-            Pageable pageable
-    ) {
-
-        return propertyService.listProperties(
-                q,
-                type,
-                minPrice,
-                maxPrice,
-                rera,
-                bhk,
-                facing,
-                furnishing,
-                pageable
-        );
+            Pageable pageable) {
+        return propertyService.listProperties(q, type, minPrice, maxPrice,
+                rera, bhk, facing, furnishing, pageable);
     }
 
-
-    /*
-     =========================================================
-     GET PROPERTY
-     =========================================================
-     */
     @GetMapping("/properties/{id}")
     public PropertyResponse getProperty(@PathVariable Long id) {
         return propertyService.getProperty(id);
     }
 
-
-    /*
-     =========================================================
-     GET PROPERTY BY SLUG
-     =========================================================
-     */
     @GetMapping("/properties/slug/{slug}")
     public ResponseEntity<Property> getPropertyBySlug(@PathVariable String slug) {
-
         return propertyRepository.findBySlug(slug)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
-    /*
-     =========================================================
-     CREATE PROPERTY
-     =========================================================
-     */
     @PostMapping("/properties")
     public ResponseEntity<PropertyResponse> createProperty(@RequestBody PropertyRequest request) {
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(propertyService.createProperty(request));
     }
 
-
-    /*
-     =========================================================
-     UPDATE PROPERTY
-     =========================================================
-     */
     @PutMapping("/properties/{id}")
-    public PropertyResponse updateProperty(
-            @PathVariable Long id,
-            @RequestBody PropertyRequest request
-    ) {
+    public PropertyResponse updateProperty(@PathVariable Long id,
+                                           @RequestBody PropertyRequest request) {
         return propertyService.updateProperty(id, request);
     }
 
-
-    /*
-     =========================================================
-     DELETE PROPERTY
-     =========================================================
-     */
     @DeleteMapping("/properties/{id}")
     public ResponseEntity<Void> deleteProperty(@PathVariable Long id) {
-
         propertyService.deleteProperty(id);
-
         return ResponseEntity.noContent().build();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  FILE UPLOADS
+    // ─────────────────────────────────────────────────────────────────────────
 
-    /*
-     =========================================================
-     IMAGE UPLOAD
-     =========================================================
-     */
     @PostMapping("/properties/{id}/upload-image")
-    public ResponseEntity<String> uploadImage(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file
-    ) {
-
-        String path = storageService.store(file, "properties/" + id);
-
-        return ResponseEntity.ok(path);
+    public ResponseEntity<String> uploadImage(@PathVariable Long id,
+                                              @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(storageService.store(file, "properties/" + id));
     }
-
 
     @PostMapping("/properties/{id}/upload-images")
-    public ResponseEntity<List<String>> uploadImages(
-            @PathVariable Long id,
-            @RequestParam("files") List<MultipartFile> files
-    ) {
-
-        return ResponseEntity.ok(
-                storageService.storeMultiple(files, "properties/" + id)
-        );
+    public ResponseEntity<List<String>> uploadImages(@PathVariable Long id,
+                                                     @RequestParam("files") List<MultipartFile> files) {
+        return ResponseEntity.ok(storageService.storeMultiple(files, "properties/" + id));
     }
 
-
-    /*
-     =========================================================
-     VIDEO UPLOAD
-     =========================================================
-     */
     @PostMapping("/properties/{id}/upload-video")
-    public ResponseEntity<String> uploadVideo(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file
-    ) {
-
-        String path = storageService.store(file, "properties/" + id + "/video");
-
-        return ResponseEntity.ok(path);
+    public ResponseEntity<String> uploadVideo(@PathVariable Long id,
+                                              @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(storageService.store(file, "properties/" + id + "/video"));
     }
 
-
-    /*
-     =========================================================
-     SIMPLE ADMIN LOGIN
-     =========================================================
-     */
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body, HttpSession session) {
-
-        if ("admin".equals(body.get("username")) &&
-                "admin123".equals(body.get("password"))) {
-
-            session.setAttribute("loggedIn", true);
-
-            return ResponseEntity.ok("Success");
-        }
-
-        return ResponseEntity.status(401).body("Invalid credentials");
-    }
 }

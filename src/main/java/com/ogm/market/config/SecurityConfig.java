@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,16 +17,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                /* Disable CSRF */
                 .csrf(csrf -> csrf.disable())
-
-                /* Enable CORS */
                 .cors(Customizer.withDefaults())
-
-                /* Authorization */
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        /* ✅ STATIC RESOURCES */
+                        /* ── Static resources ─────────────────────────────── */
                         .requestMatchers(
                                 new AntPathRequestMatcher("/images/**"),
                                 new AntPathRequestMatcher("/videos/**"),
@@ -34,17 +32,17 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/logo.png")
                         ).permitAll()
 
-                        /* ✅ PUBLIC APIs */
+                        /* ── Public API endpoints ─────────────────────────── */
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/properties/**",
                                 "/api/ai/**",
-                                "/api/live-tour/**",   // 🔥 ADD THIS
-                                "/live-queue/**",      // 🔥 ADD THIS (WebSocket)
+                                "/api/brochure/**",
+                                "/api/contact/**",
+                                "/api/live-tour/**",
+                                "/live-queue/**",
                                 "/"
                         ).permitAll()
-
-                        /* 🔒 Everything else requires auth */
                         .anyRequest().authenticated()
                 );
 

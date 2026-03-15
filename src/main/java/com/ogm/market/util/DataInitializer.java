@@ -964,7 +964,7 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
 
 
-        repo.saveAll(Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8,p9,p10,
+        repo.saveAll(Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
                 p11, p12, p13, p14, p15, p16, p17, p18, p19, p20));
 
         System.out.println("✔ Sample properties loaded successfully.");
@@ -989,16 +989,13 @@ public class DataInitializer implements CommandLineRunner {
         if (priceStr.contains("crore")) {
             multiplier = 1_00_00_000;
             priceStr = priceStr.replace("crore", "").trim();
-        }
-        else if (priceStr.contains("cr")) {
+        } else if (priceStr.contains("cr")) {
             multiplier = 1_00_00_000;
             priceStr = priceStr.replace("cr", "").trim();
-        }
-        else if (priceStr.contains("lakhs")) {
+        } else if (priceStr.contains("lakhs")) {
             multiplier = 1_00_000;
             priceStr = priceStr.replace("lakhs", "").trim();
-        }
-        else if (priceStr.contains("lakh")) {
+        } else if (priceStr.contains("lakh")) {
             multiplier = 1_00_000;
             priceStr = priceStr.replace("lakh", "").trim();
         }
