@@ -7,6 +7,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -19,7 +20,7 @@ public class WebCorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        List<String> origins = new java.util.ArrayList<>(List.of(
+        List<String> origins = new ArrayList<>(List.of(
                 "https://oneglobalmarketplace.com",
                 "https://www.oneglobalmarketplace.com",
                 "http://localhost:3000"
