@@ -13,30 +13,17 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * AI-powered property search — handles all 19 buyer search scenarios.
- *
- * Search cascade (in priority order):
- *  1. Distance / radius search       — cases 3, 4
- *  2. Multi-amenity search           — case 13
- *  3. Multi-location sweep           — cases 14, 15
- *  4. Extended structured search     — cases 1,2,5,6,7,8,9,10,11,12,16,17,18,19
- *  5. Hybrid vector + structured     — embedding similarity
- *  6. Deep full-text keyword search  — keyword fallback
- *  7. Pure semantic search           — last resort
- *  8. postFilter                     — in-memory safety net applied after every step
- */
 @Service
 public class AISearchServiceImpl implements AISearchService {
 
     private static final Logger log = LoggerFactory.getLogger(AISearchServiceImpl.class);
     private static final int DEFAULT_MAX = 6;
-    private static final int HARD_CAP    = 20;
+    private static final int HARD_CAP = 20;
 
     private final PropertyRepository repository;
-    private final GeminiService      geminiService;
-    private final EmbeddingService   embeddingService;
-    private final IntentDetector     intentDetector;
+    private final GeminiService geminiService;
+    private final EmbeddingService embeddingService;
+    private final IntentDetector intentDetector;
 
     @Value("${storage.base-url:http://localhost:8080}")
     private String storageBaseUrl;
@@ -45,10 +32,10 @@ public class AISearchServiceImpl implements AISearchService {
                                GeminiService geminiService,
                                EmbeddingService embeddingService,
                                IntentDetector intentDetector) {
-        this.repository       = repository;
-        this.geminiService    = geminiService;
+        this.repository = repository;
+        this.geminiService = geminiService;
         this.embeddingService = embeddingService;
-        this.intentDetector   = intentDetector;
+        this.intentDetector = intentDetector;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -62,11 +49,20 @@ public class AISearchServiceImpl implements AISearchService {
             return emptyResponse("Please tell me what kind of property you're looking for.");
         }
 
-        // Gemini parses the entire query into structured filters
+        boolean hasGps = request.getUserLatitude() != null
+                && request.getUserLongitude() != null;
+
         AiFilter filter = geminiService.extractFilters(prompt);
 
-        // Inject GPS for "near me" queries sent from the frontend
-        if (Boolean.TRUE.equals(filter.getUseCurrentLocation())) {
+        if (hasGps) {
+            filter.setUseCurrentLocation(true);
+            filter.setUserLatitude(request.getUserLatitude());
+            filter.setUserLongitude(request.getUserLongitude());
+            // Default 15 km radius if user did not mention a specific distance
+            if (filter.getDistanceKm() == null) {
+                filter.setDistanceKm(15.0);
+            }
+        } else if (Boolean.TRUE.equals(filter.getUseCurrentLocation())) {
             filter.setUserLatitude(request.getUserLatitude());
             filter.setUserLongitude(request.getUserLongitude());
         }
@@ -82,11 +78,12 @@ public class AISearchServiceImpl implements AISearchService {
             filter.setAmenities(amenityList);
         }
 
-        log.info("AI Search — intent={}, limit={}, filters={}", intent, limit, filter);
+        log.info("AI Search — intent={}, hasGps={}, limit={}, filters={}",
+                intent, hasGps, limit, filter);
 
         List<Property> results = Collections.emptyList();
 
-        // ── 1. Distance / radius (cases 3 & 4) ───────────────────────────────
+        // ── 1. Distance / radius — fires FIRST when GPS coordinates are present ──
         if (filter.isDistanceSearch()) {
             results = tryDistanceSearch(filter, limit);
         }
@@ -138,20 +135,11 @@ public class AISearchServiceImpl implements AISearchService {
                 .build();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  SEARCH STRATEGIES
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Extended structured search — covers all scenarios that rely on DB columns.
-     * Loops over every BHK x location combination so multi-BHK and
-     * multi-location queries (cases 5, 14, 15) work without a native IN clause.
-     */
     private List<Property> tryExtendedSearch(AiFilter f, int limit) {
         List<Property> results = new ArrayList<>();
 
         List<Integer> bhkValues = f.getEffectiveBhkList();
-        List<String>  locTokens = f.isMultiLocation()
+        List<String> locTokens = f.isMultiLocation()
                 ? f.getLocations()
                 : f.getEffectiveLocations();
 
@@ -203,7 +191,7 @@ public class AISearchServiceImpl implements AISearchService {
         try {
             // Case 4 — GPS coordinates from the frontend
             if (Boolean.TRUE.equals(f.getUseCurrentLocation())
-                    && f.getUserLatitude()  != null
+                    && f.getUserLatitude() != null
                     && f.getUserLongitude() != null) {
 
                 log.info("Radius search: GPS ({},{}) within {} km",
@@ -241,10 +229,6 @@ public class AISearchServiceImpl implements AISearchService {
         return Collections.emptyList();
     }
 
-    /**
-     * Multi-amenity search — case 13.
-     * Returns properties that have ALL required amenities (relaxes to 50% if none match all).
-     */
     private List<Property> tryMultiAmenitySearch(AiFilter f, List<String> amenities, int limit) {
         try {
             if (amenities.size() == 1) {
@@ -277,10 +261,7 @@ public class AISearchServiceImpl implements AISearchService {
         }
     }
 
-    /**
-     * Multi-location sweep — cases 14, 15.
-     * Runs extendedSearch per location and merges deduplicated results.
-     */
+
     private List<Property> tryMultiLocationSearch(AiFilter f, int limit) {
         List<Property> all = new ArrayList<>();
         int perLoc = Math.max(DEFAULT_MAX, limit / f.getLocations().size());
@@ -295,12 +276,14 @@ public class AISearchServiceImpl implements AISearchService {
         return deduplicateAndSort(all);
     }
 
-    /** Hybrid vector + structured search */
+    /**
+     * Hybrid vector + structured search
+     */
     private List<Property> tryHybridSearch(String prompt, AiFilter f, int limit) {
         try {
             List<Double> vector = embeddingService.generateEmbedding(prompt);
-            String pgVector     = toPgVector(vector);
-            String locToken     = primaryLocationToken(f);
+            String pgVector = toPgVector(vector);
+            String locToken = primaryLocationToken(f);
 
             List<Property> hits = repository.hybridSearch(
                     pgVector, locToken,
@@ -314,13 +297,15 @@ public class AISearchServiceImpl implements AISearchService {
         }
     }
 
-    /** Deep full-text keyword search — seeds from filter fields */
+    /**
+     * Deep full-text keyword search — seeds from filter fields
+     */
     private List<Property> tryKeywordDeepSearch(String rawPrompt, AiFilter f, int limit) {
         List<String> tokens = new ArrayList<>();
-        if (f.getLocation()      != null) tokens.add(f.getLocation());
-        if (f.getCity()          != null) tokens.add(f.getCity());
+        if (f.getLocation() != null) tokens.add(f.getLocation());
+        if (f.getCity() != null) tokens.add(f.getCity());
         if (f.getDeveloperName() != null) tokens.add(f.getDeveloperName());
-        if (f.getKeyword()       != null) tokens.add(f.getKeyword());
+        if (f.getKeyword() != null) tokens.add(f.getKeyword());
         tokens.addAll(rawTokens(rawPrompt, tokens));
 
         for (String token : tokens) {
@@ -335,7 +320,9 @@ public class AISearchServiceImpl implements AISearchService {
         return Collections.emptyList();
     }
 
-    /** Pure semantic search — last resort */
+    /**
+     * Pure semantic search — last resort
+     */
     private List<Property> trySemanticSearch(String prompt, int limit) {
         try {
             List<Double> vector = embeddingService.generateEmbedding(prompt);
@@ -353,17 +340,17 @@ public class AISearchServiceImpl implements AISearchService {
     private List<Property> postFilter(List<Property> results, AiFilter f) {
         if (results == null || results.isEmpty()) return Collections.emptyList();
         return results.stream()
-                .filter(p -> matchesType(p.getType(),   f.getType()))
-                .filter(p -> matchesBhk(p,              f))
-                .filter(p -> matchesPrice(p,            f))
-                .filter(p -> matchesLocation(p,         f))
-                .filter(p -> matchesSqft(p,             f))
-                .filter(p -> matchesDeveloper(p,        f))
-                .filter(p -> matchesVastu(p,            f))
-                .filter(p -> matchesPossession(p,       f))
-                .filter(p -> matchesListingType(p,      f))
-                .filter(p -> matchesRera(p,             f))
-                .filter(p -> matchesNewProject(p,       f))
+                .filter(p -> matchesType(p.getType(), f.getType()))
+                .filter(p -> matchesBhk(p, f))
+                .filter(p -> matchesPrice(p, f))
+                .filter(p -> matchesLocation(p, f))
+                .filter(p -> matchesSqft(p, f))
+                .filter(p -> matchesDeveloper(p, f))
+                .filter(p -> matchesVastu(p, f))
+                .filter(p -> matchesPossession(p, f))
+                .filter(p -> matchesListingType(p, f))
+                .filter(p -> matchesRera(p, f))
+                .filter(p -> matchesNewProject(p, f))
                 .collect(Collectors.toList());
     }
 
@@ -374,16 +361,16 @@ public class AISearchServiceImpl implements AISearchService {
         String a = actual.toLowerCase(), w = wanted.toLowerCase();
         if (a.contains(w)) return true;
         return switch (w) {
-            case "villa"             -> a.contains("villa") || a.contains("bungalow")
+            case "villa" -> a.contains("villa") || a.contains("bungalow")
                     || a.contains("independent house") || a.contains("row house");
             case "apartment", "flat" -> a.contains("apartment") || a.contains("flat") || a.contains("condo");
-            case "plot", "land"      -> a.contains("plot")  || a.contains("land")  || a.contains("site");
-            case "commercial"        -> a.contains("commercial") || a.contains("office") || a.contains("shop");
-            case "penthouse"         -> a.contains("penthouse");
-            case "duplex"            -> a.contains("duplex");
-            case "farmhouse"         -> a.contains("farm");
-            case "holiday"           -> a.contains("holiday") || a.contains("vacation") || a.contains("resort");
-            default                  -> a.contains(w);
+            case "plot", "land" -> a.contains("plot") || a.contains("land") || a.contains("site");
+            case "commercial" -> a.contains("commercial") || a.contains("office") || a.contains("shop");
+            case "penthouse" -> a.contains("penthouse");
+            case "duplex" -> a.contains("duplex");
+            case "farmhouse" -> a.contains("farm");
+            case "holiday" -> a.contains("holiday") || a.contains("vacation") || a.contains("resort");
+            default -> a.contains(w);
         };
     }
 
@@ -396,7 +383,7 @@ public class AISearchServiceImpl implements AISearchService {
     private boolean matchesPrice(Property p, AiFilter f) {
         if (p.getPrice() == null) return true;
         if (f.getMaxPrice() != null && p.getPrice() > f.getMaxPrice() * 1.10) return false;
-        if (f.getMinPrice() != null && p.getPrice() < f.getMinPrice())         return false;
+        if (f.getMinPrice() != null && p.getPrice() < f.getMinPrice()) return false;
         return true;
     }
 
@@ -418,8 +405,8 @@ public class AISearchServiceImpl implements AISearchService {
         if (f.getDeveloperName() == null) return true;
         String dev = f.getDeveloperName().toLowerCase();
         if (p.getDeveloperName() != null && p.getDeveloperName().toLowerCase().contains(dev)) return true;
-        if (p.getTitle()         != null && p.getTitle().toLowerCase().contains(dev))         return true;
-        if (p.getDescription()   != null && p.getDescription().toLowerCase().contains(dev))   return true;
+        if (p.getTitle() != null && p.getTitle().toLowerCase().contains(dev)) return true;
+        if (p.getDescription() != null && p.getDescription().toLowerCase().contains(dev)) return true;
         return false;
     }
 
@@ -475,7 +462,7 @@ public class AISearchServiceImpl implements AISearchService {
 
     private int countMatchingAmenities(Property p, List<String> required) {
         String combined = "";
-        if (p.getAmenities()   != null) combined += String.join(" ", p.getAmenities()).toLowerCase();
+        if (p.getAmenities() != null) combined += String.join(" ", p.getAmenities()).toLowerCase();
         if (p.getDescription() != null) combined += " " + p.getDescription().toLowerCase();
         final String text = combined;
         return (int) required.stream().filter(a -> text.contains(a.toLowerCase())).count();
@@ -512,7 +499,7 @@ public class AISearchServiceImpl implements AISearchService {
             double higher = f.getMaxPrice() * 1.5;
             String label = higher >= 10_000_000
                     ? String.format("%.1f Cr", higher / 10_000_000)
-                    : String.format("%.0f L",  higher / 100_000);
+                    : String.format("%.0f L", higher / 100_000);
             out.add("Show options under " + label);
         }
 
@@ -578,14 +565,17 @@ public class AISearchServiceImpl implements AISearchService {
 
     private String primaryLocationToken(AiFilter f) {
         if (f.getLocation() != null && !f.getLocation().isBlank()) return f.getLocation();
-        if (f.getCity()     != null && !f.getCity().isBlank())     return f.getCity();
+        if (f.getCity() != null && !f.getCity().isBlank()) return f.getCity();
         return null;
     }
 
     private LocalDate parsePossessionDate(String isoDate) {
         if (isoDate == null || isoDate.isBlank()) return null;
-        try { return LocalDate.parse(isoDate); }
-        catch (DateTimeParseException e) { return null; }
+        try {
+            return LocalDate.parse(isoDate);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 
     private List<Property> deduplicateAndSort(List<Property> list) {

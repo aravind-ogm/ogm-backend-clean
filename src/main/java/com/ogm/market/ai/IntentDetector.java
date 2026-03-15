@@ -10,12 +10,29 @@ public class IntentDetector {
 
     public enum Intent {
         PROPERTY_SEARCH,
+        LOCATION_SEARCH,    // "near me", "nearby", "properties near my location"
         AMENITY_SEARCH,     // "properties with swimming pool", "gym", "parking"
-        GENERAL_CHAT,
-        FOLLOWUP_SEARCH
+        FOLLOWUP_SEARCH,
+        GENERAL_CHAT
     }
 
-    /* Property search signals */
+    // ─── Proximity / location signals ────────────────────────────────────────
+    // Checked FIRST — if the user provides GPS coords, this always wins.
+    private static final Pattern PROXIMITY_PATTERN = Pattern.compile(
+            "(?i)(" +
+                    "near\\s+me|near\\s+by|nearby|" +
+                    "my\\s+(current\\s+)?loc\\w+|" +       // "my location", "my locatin" (typo)
+                    "what\\s+is\\s+my\\s+loc\\w+|" +       // "what is my location"
+                    "where\\s+am\\s+i|" +
+                    "from\\s+here|around\\s+me|close\\s+to\\s+me|" +
+                    "properties\\s+(here|nearby|near\\s+me|around)|" +
+                    "find\\s+.*(here|this\\s+area)|" +
+                    "show\\s+.*(near(by)?|around\\s+me)|" +
+                    "within\\s+\\d+\\s*km|\\d+\\s*km\\s+(from|near|around)" +
+                    ")"
+    );
+
+    // ─── Property search signals ──────────────────────────────────────────────
     private static final Pattern SEARCH_PATTERN = Pattern.compile(
             "(?i)(" +
                     "show\\s+me|find\\s+me|search|looking\\s+for|" +
@@ -36,7 +53,7 @@ public class IntentDetector {
                     ")"
     );
 
-    /* Amenity/feature search signals */
+    // ─── Amenity signals ──────────────────────────────────────────────────────
     private static final Set<String> AMENITY_KEYWORDS = Set.of(
             "swimming pool", "pool", "gym", "gymnasium", "parking", "garden",
             "clubhouse", "club house", "playground", "play area", "kids area",
@@ -62,7 +79,7 @@ public class IntentDetector {
                     "can\\s+you\\s+find)"
     );
 
-    /* Follow-up signals */
+    // ─── Follow-up signals ────────────────────────────────────────────────────
     private static final Pattern FOLLOWUP_PATTERN = Pattern.compile(
             "(?i)(" +
                     "show\\s+(?:me\\s+)?(?:more|similar|cheaper|expensive|bigger|smaller)|" +
@@ -75,7 +92,7 @@ public class IntentDetector {
                     ")"
     );
 
-    /* Pure chat signals */
+    // ─── Pure chat signals ────────────────────────────────────────────────────
     private static final Set<String> GREETING_WORDS = Set.of(
             "hi", "hello", "hey", "helo", "good morning", "good afternoon",
             "good evening", "thanks", "thank you", "thank", "ok", "okay",
@@ -95,89 +112,107 @@ public class IntentDetector {
                     "what.*(?:rera|stamp duty|registration|loan|emi|interest|tax|gst))"
     );
 
-    /**
-     * Detect intent from user message.
-     */
     public Intent detect(String message) {
         if (message == null || message.isBlank()) return Intent.GENERAL_CHAT;
 
         String trimmed = message.trim().toLowerCase();
 
-        // 1. Pure greeting / short acknowledgment
+        // 1. Short greeting / acknowledgment
         if (GREETING_WORDS.contains(trimmed) || trimmed.length() <= 3) {
             return Intent.GENERAL_CHAT;
         }
 
-        // 2. Check for amenity/feature search — "with swimming pool", "has gym"
+        // 2. Proximity / "near me" — checked before everything else
+        if (PROXIMITY_PATTERN.matcher(trimmed).find()) {
+            return Intent.LOCATION_SEARCH;
+        }
+
+        // 3. Amenity search
         if (containsAmenityKeyword(trimmed)) {
             return Intent.AMENITY_SEARCH;
         }
 
-        // 3. General knowledge question (not property search)
-        if (QUESTION_PATTERN.matcher(trimmed).find() && !SEARCH_PATTERN.matcher(trimmed).find()) {
+        // 4. General knowledge question (not property search)
+        if (QUESTION_PATTERN.matcher(trimmed).find()
+                && !SEARCH_PATTERN.matcher(trimmed).find()) {
             return Intent.GENERAL_CHAT;
         }
 
-        // 4. Follow-up
+        // 5. Follow-up
         if (FOLLOWUP_PATTERN.matcher(trimmed).find()) {
             return Intent.FOLLOWUP_SEARCH;
         }
 
-        // 5. Property search signals
+        // 6. Explicit property search signals
         if (SEARCH_PATTERN.matcher(trimmed).find()) {
             return Intent.PROPERTY_SEARCH;
         }
 
-        // 6. Short message with no search signal — likely chat
+        // 7. Short message with no search signal — likely chat
         if (trimmed.split("\\s+").length < 5) {
             return Intent.GENERAL_CHAT;
         }
 
-        // 7. Contains location name with enough context
+        // 8. Contains known location name
         if (containsLocationName(trimmed) && trimmed.split("\\s+").length >= 3) {
             return Intent.PROPERTY_SEARCH;
         }
 
-        // Default: general chat
         return Intent.GENERAL_CHAT;
     }
 
-    /**
-     * Extract the amenity keyword from the message (if present)
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    //  HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+
     public String extractAmenityKeyword(String message) {
         if (message == null) return null;
         String lower = message.toLowerCase();
-
-        // Return the longest matching amenity keyword
         String best = null;
         for (String amenity : AMENITY_KEYWORDS) {
             if (lower.contains(amenity)) {
-                if (best == null || amenity.length() > best.length()) {
-                    best = amenity;
-                }
+                if (best == null || amenity.length() > best.length()) best = amenity;
             }
         }
         return best;
     }
 
-    private boolean containsAmenityKeyword(String query) {
-        // Must contain an amenity keyword
-        boolean hasAmenity = false;
-        for (String amenity : AMENITY_KEYWORDS) {
-            if (query.contains(amenity)) {
-                hasAmenity = true;
-                break;
-            }
-        }
-        if (!hasAmenity) return false;
+    public boolean isProximityQuery(String message) {
+        if (message == null || message.isBlank()) return false;
+        return PROXIMITY_PATTERN.matcher(message.toLowerCase()).find();
+    }
 
-        // And should have some search context (not just "what is a swimming pool?")
-        return AMENITY_CONTEXT_PATTERN.matcher(query).find() ||
-                SEARCH_PATTERN.matcher(query).find() ||
-                query.contains("property") || query.contains("properties") ||
-                query.contains("flat") || query.contains("villa") ||
-                query.contains("apartment") || query.contains("home");
+    public boolean isLocationNameQuery(String message) {
+        if (message == null || message.isBlank()) return false;
+        String lower = message.trim().toLowerCase()
+                .replaceAll("[?!.]", "").trim();
+
+        // Direct location name questions
+        if (lower.matches("(what is |tell me |show me |can you tell me )?my (current )?loc\\w*")) return true;
+        if (lower.matches("(what is |where is )?my (current )?location( name)?")) return true;
+        if (lower.matches("my location( name)?")) return true;
+        if (lower.matches("where am i")) return true;
+        if (lower.matches("(can you tell|tell) me (my|where i am|my current location).*")) return true;
+        if (lower.matches("what.*my.*loc\\w*")) return true;
+
+        // Must NOT contain property search signals
+        boolean hasPropertySignal = SEARCH_PATTERN.matcher(lower).find()
+                || lower.contains("property") || lower.contains("flat")
+                || lower.contains("villa") || lower.contains("apartment")
+                || lower.contains("bhk") || lower.contains("find");
+
+        return !hasPropertySignal
+                && (lower.contains("my location") || lower.contains("my loc") || lower.contains("where am i"));
+    }
+
+    private boolean containsAmenityKeyword(String query) {
+        boolean hasAmenity = AMENITY_KEYWORDS.stream().anyMatch(query::contains);
+        if (!hasAmenity) return false;
+        return AMENITY_CONTEXT_PATTERN.matcher(query).find()
+                || SEARCH_PATTERN.matcher(query).find()
+                || query.contains("property") || query.contains("properties")
+                || query.contains("flat") || query.contains("villa")
+                || query.contains("apartment") || query.contains("home");
     }
 
     private boolean containsLocationName(String query) {
