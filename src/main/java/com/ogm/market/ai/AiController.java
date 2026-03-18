@@ -27,18 +27,49 @@ public class AiController {
     public AiController(GeminiService geminiService,
                         AISearchService aiSearchService,
                         IntentDetector intentDetector) {
-        this.geminiService = geminiService;
-        this.aiSearchService = aiSearchService;
-        this.intentDetector = intentDetector;
+        this.geminiService    = geminiService;
+        this.aiSearchService  = aiSearchService;
+        this.intentDetector   = intentDetector;
     }
 
     @PostMapping("/ask")
     public ResponseEntity<AiChatResponse> askAi(@Valid @RequestBody AiRequest request) {
 
-        String userQuestion = request.getQuestion();
-        String chatId = request.getChatId();
-        boolean hasGps = request.getUserLatitude() != null
-                && request.getUserLongitude() != null;
+        String  userQuestion = request.getQuestion();
+        String  chatId       = request.getChatId();
+        boolean hasGps       = request.getUserLatitude()  != null
+                            && request.getUserLongitude() != null;
+
+        // ── Route / distance query ────────────────────────────────────────────
+        // Frontend sets isRouteQuery=true when it detects a direction/distance
+        // intent.  We also double-check with IntentDetector in case the flag
+        // is missing (e.g. direct API call, old client).
+        boolean isRouteQuery = request.isRouteQuery()
+                || intentDetector.isRouteQuery(userQuestion);
+
+        if (isRouteQuery) {
+            log.info("AI — ROUTE_QUERY detected, skipping search. chatId={}, question='{}'",
+                    chatId, userQuestion);
+
+            // Store in history so follow-ups have context
+            if (chatId != null && !chatId.isBlank()) {
+                addToHistory(chatId, "user", userQuestion);
+                addToHistory(chatId, "ai", "Route shown on map.");
+            }
+
+            // Return empty response — the Google Maps DirectionsService on the
+            // frontend draws the route and shows distance + duration in the map panel.
+            return ResponseEntity.ok(
+                    AiChatResponse.builder()
+                            .message("")           // frontend replaces this with its own route text
+                            .hasResults(false)
+                            .isRouteQuery(true)
+                            .properties(List.of())
+                            .followUps(List.of())
+                            .build()
+            );
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         IntentDetector.Intent textIntent = intentDetector.detect(userQuestion);
         IntentDetector.Intent intent;
@@ -46,7 +77,6 @@ public class AiController {
         boolean isLocationQuestion = intentDetector.isLocationNameQuery(userQuestion);
 
         if (isLocationQuestion) {
-
             intent = IntentDetector.Intent.GENERAL_CHAT;
         } else if (hasGps && textIntent == IntentDetector.Intent.LOCATION_SEARCH) {
             intent = IntentDetector.Intent.LOCATION_SEARCH;
@@ -67,7 +97,15 @@ public class AiController {
                      FOLLOWUP_SEARCH,
                      AMENITY_SEARCH,
                      LOCATION_SEARCH -> handlePropertySearch(request, chatId, hasGps);
-                default -> handleGeneralChat(userQuestion, chatId);
+                // ROUTE_QUERY is already handled above — this case is a safety net
+                case ROUTE_QUERY    -> AiChatResponse.builder()
+                                            .message("")
+                                            .hasResults(false)
+                                            .isRouteQuery(true)
+                                            .properties(List.of())
+                                            .followUps(List.of())
+                                            .build();
+                default             -> handleGeneralChat(userQuestion, chatId);
             };
 
             if (chatId != null && !chatId.isBlank()) {
@@ -81,7 +119,9 @@ public class AiController {
             return ResponseEntity.ok(
                     AiChatResponse.builder()
                             .message("I'm experiencing technical difficulties. Please try again.")
-                            .hasResults(false).properties(List.of()).followUps(List.of())
+                            .hasResults(false)
+                            .properties(List.of())
+                            .followUps(List.of())
                             .build());
         }
     }
@@ -95,7 +135,6 @@ public class AiController {
                                                 boolean hasGps) {
         AiChatResponse searchResponse = aiSearchService.search(request);
 
-        // Build property context for Gemini including distance when GPS is available
         String propertyContext = null;
         if (searchResponse.isHasResults()) {
             StringBuilder ctx = new StringBuilder();
@@ -103,12 +142,12 @@ public class AiController {
                 ctx.append("- ").append(card.getTitle())
                         .append(" | ").append(card.getPrice())
                         .append(" | ").append(card.getLocation());
-                if (card.getSqft() != null) ctx.append(" | ").append(card.getSqft()).append(" sqft");
+                if (card.getSqft()     != null) ctx.append(" | ").append(card.getSqft()).append(" sqft");
                 if (card.getBedrooms() != null) ctx.append(" | ").append(card.getBedrooms()).append(" BHK");
                 if (hasGps && card.getLatitude() != null && card.getLongitude() != null) {
                     double dist = haversine(
-                            request.getUserLatitude(), request.getUserLongitude(),
-                            card.getLatitude(), card.getLongitude());
+                            request.getUserLatitude(),  request.getUserLongitude(),
+                            card.getLatitude(),          card.getLongitude());
                     ctx.append(String.format(" | %.1f km from your location", dist));
                 }
                 ctx.append("\n");
@@ -132,10 +171,15 @@ public class AiController {
 
         return AiChatResponse.builder()
                 .message(aiMessage)
-                .hasResults(false).properties(List.of()).followUps(List.of())
+                .hasResults(false)
+                .properties(List.of())
+                .followUps(List.of())
                 .build();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  PROMPT BUILDER
+    // ─────────────────────────────────────────────────────────────────────────
 
     private String buildPrompt(String chatId,
                                AiRequest request,
@@ -162,7 +206,6 @@ public class AiController {
                 - If no location name is available, say "your current location" or "near you"
                 """);
 
-
         if (hasGps) {
             String locationName = request.getUserLocationName();
             boolean hasName = locationName != null && !locationName.isBlank();
@@ -171,21 +214,21 @@ public class AiController {
             if (hasName) {
                 prompt.append(
                         "\nCUSTOMER LOCATION (verified - do NOT show coordinates to the user):\n"
-                                + "Current location: " + locationName + "\n"
-                                + "When asked what is my location or my location name, reply with the name above.\n"
-                                + "Never show lat/lng numbers in your reply.\n"
-                                + "Reference naturally: near " + shortName + ", in " + shortName + ", close to your location.\n"
-                                + "Each property below shows its distance from this location.\n"
-                );
+                        + "Current location: " + locationName + "\n"
+                        + "When asked what is my location or my location name, reply with the name above.\n"
+                        + "Never show lat/lng numbers in your reply.\n"
+                        + "Reference naturally: near " + shortName + ", in " + shortName
+                        + ", close to your location.\n"
+                        + "Each property below shows its distance from this location.\n");
             } else {
                 prompt.append(
                         "\nCUSTOMER LOCATION (verified - do NOT show coordinates to the user):\n"
-                                + "The customer has shared their GPS location.\n"
-                                + "Refer to it as your current location or near you - never show numbers.\n"
-                                + "Each property below shows its distance from the customer.\n"
-                );
+                        + "The customer has shared their GPS location.\n"
+                        + "Refer to it as your current location or near you - never show numbers.\n"
+                        + "Each property below shows its distance from the customer.\n");
             }
         }
+
         if (!isPropertyQuery) {
             prompt.append("""
                     
@@ -263,6 +306,6 @@ public class AiController {
     public static class ChatMessage {
         private String role;
         private String content;
-        private long timestamp;
+        private long   timestamp;
     }
 }

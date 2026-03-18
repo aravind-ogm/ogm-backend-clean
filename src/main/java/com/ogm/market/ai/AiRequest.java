@@ -14,7 +14,6 @@ public class AiRequest {
     /**
      * User's current GPS latitude.
      * Required only when the query contains "near me" / "my current location".
-     * The frontend should send this via the browser Geolocation API.
      */
     private Double userLatitude;
 
@@ -25,12 +24,19 @@ public class AiRequest {
     private Double userLongitude;
 
     /**
-     * Human-readable location name reverse-geocoded on the frontend
-     * using the free OpenStreetMap Nominatim API (no API key required).
+     * Human-readable location name reverse-geocoded on the frontend.
      * e.g. "Koramangala, Bengaluru, Karnataka, India"
-     *
      * Injected into the Gemini prompt so the AI can answer
      * "what is my location?" correctly without any backend geocoding call.
      */
     private String userLocationName;
+
+    /**
+     * Set to true by the frontend when the user's question is a distance /
+     * directions query (e.g. "distance between X and Y", "route from X to Y").
+     *
+     * When true the controller skips Gemini + property search entirely and
+     * returns an empty response — the map panel handles the route visually.
+     */
+    private boolean isRouteQuery;
 }

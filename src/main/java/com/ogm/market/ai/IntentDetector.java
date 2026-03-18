@@ -13,16 +13,39 @@ public class IntentDetector {
         LOCATION_SEARCH,    // "near me", "nearby", "properties near my location"
         AMENITY_SEARCH,     // "properties with swimming pool", "gym", "parking"
         FOLLOWUP_SEARCH,
+        ROUTE_QUERY,        // "distance between X and Y", "route from X to Y"
         GENERAL_CHAT
     }
 
-    // ─── Proximity / location signals ────────────────────────────────────────
-    // Checked FIRST — if the user provides GPS coords, this always wins.
+    // ─── Route / distance signals — checked FIRST ─────────────────────────────
+    // These must win over PROPERTY_SEARCH and LOCATION_SEARCH.
+    private static final Pattern ROUTE_PATTERN = Pattern.compile(
+            "(?i)(" +
+                    // "distance between X and Y"
+                    "distance\\s+between\\s+.+\\s+(and|to)\\s+.+|" +
+                    // "route / directions / navigate from X to Y"
+                    "(route|directions?|navigate|navigation|path)\\s+from\\s+.+\\s+to\\s+.+|" +
+                    // "how far is X from Y"
+                    "how\\s+far\\s+(is\\s+)?.*\\s+from\\s+.+|" +
+                    // "X to Y distance / route"
+                    ".+\\s+to\\s+.+\\s+(distance|route|directions?|km|kilometers?|miles?)|" +
+                    // "travel time / commute / drive from X to Y"
+                    "(travel\\s+time|commute|drive|driving)\\s+from\\s+.+\\s+to\\s+.+|" +
+                    // "show route / directions X to Y"
+                    "show\\s+(route|directions?|path)\\s+(from\\s+)?.+\\s+to\\s+.+|" +
+                    // "find me route" / "get me directions"
+                    "(find|get)\\s+me\\s+(route|directions?)\\s+(from\\s+)?.+|" +
+                    // "time to reach X from Y"
+                    "time\\s+to\\s+reach\\s+.+\\s+from\\s+.+" +
+                    ")"
+    );
+
+    // ─── Proximity / location signals ─────────────────────────────────────────
     private static final Pattern PROXIMITY_PATTERN = Pattern.compile(
             "(?i)(" +
                     "near\\s+me|near\\s+by|nearby|" +
-                    "my\\s+(current\\s+)?loc\\w+|" +       // "my location", "my locatin" (typo)
-                    "what\\s+is\\s+my\\s+loc\\w+|" +       // "what is my location"
+                    "my\\s+(current\\s+)?loc\\w+|" +
+                    "what\\s+is\\s+my\\s+loc\\w+|" +
                     "where\\s+am\\s+i|" +
                     "from\\s+here|around\\s+me|close\\s+to\\s+me|" +
                     "properties\\s+(here|nearby|near\\s+me|around)|" +
@@ -32,7 +55,7 @@ public class IntentDetector {
                     ")"
     );
 
-    // ─── Property search signals ──────────────────────────────────────────────
+    // ─── Property search signals ───────────────────────────────────────────────
     private static final Pattern SEARCH_PATTERN = Pattern.compile(
             "(?i)(" +
                     "show\\s+me|find\\s+me|search|looking\\s+for|" +
@@ -53,7 +76,7 @@ public class IntentDetector {
                     ")"
     );
 
-    // ─── Amenity signals ──────────────────────────────────────────────────────
+    // ─── Amenity signals ───────────────────────────────────────────────────────
     private static final Set<String> AMENITY_KEYWORDS = Set.of(
             "swimming pool", "pool", "gym", "gymnasium", "parking", "garden",
             "clubhouse", "club house", "playground", "play area", "kids area",
@@ -79,7 +102,7 @@ public class IntentDetector {
                     "can\\s+you\\s+find)"
     );
 
-    // ─── Follow-up signals ────────────────────────────────────────────────────
+    // ─── Follow-up signals ─────────────────────────────────────────────────────
     private static final Pattern FOLLOWUP_PATTERN = Pattern.compile(
             "(?i)(" +
                     "show\\s+(?:me\\s+)?(?:more|similar|cheaper|expensive|bigger|smaller)|" +
@@ -92,7 +115,7 @@ public class IntentDetector {
                     ")"
     );
 
-    // ─── Pure chat signals ────────────────────────────────────────────────────
+    // ─── Pure chat signals ─────────────────────────────────────────────────────
     private static final Set<String> GREETING_WORDS = Set.of(
             "hi", "hello", "hey", "helo", "good morning", "good afternoon",
             "good evening", "thanks", "thank you", "thank", "ok", "okay",
@@ -112,6 +135,10 @@ public class IntentDetector {
                     "what.*(?:rera|stamp duty|registration|loan|emi|interest|tax|gst))"
     );
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  MAIN DETECT
+    // ─────────────────────────────────────────────────────────────────────────
+
     public Intent detect(String message) {
         if (message == null || message.isBlank()) return Intent.GENERAL_CHAT;
 
@@ -122,38 +149,44 @@ public class IntentDetector {
             return Intent.GENERAL_CHAT;
         }
 
-        // 2. Proximity / "near me" — checked before everything else
+        // 2. Route / distance — checked FIRST, before proximity and property search
+        //    "distance between X and Y" must not fall through to PROPERTY_SEARCH
+        if (ROUTE_PATTERN.matcher(trimmed).find()) {
+            return Intent.ROUTE_QUERY;
+        }
+
+        // 3. Proximity / "near me"
         if (PROXIMITY_PATTERN.matcher(trimmed).find()) {
             return Intent.LOCATION_SEARCH;
         }
 
-        // 3. Amenity search
+        // 4. Amenity search
         if (containsAmenityKeyword(trimmed)) {
             return Intent.AMENITY_SEARCH;
         }
 
-        // 4. General knowledge question (not property search)
+        // 5. General knowledge question (not property search)
         if (QUESTION_PATTERN.matcher(trimmed).find()
                 && !SEARCH_PATTERN.matcher(trimmed).find()) {
             return Intent.GENERAL_CHAT;
         }
 
-        // 5. Follow-up
+        // 6. Follow-up
         if (FOLLOWUP_PATTERN.matcher(trimmed).find()) {
             return Intent.FOLLOWUP_SEARCH;
         }
 
-        // 6. Explicit property search signals
+        // 7. Explicit property search signals
         if (SEARCH_PATTERN.matcher(trimmed).find()) {
             return Intent.PROPERTY_SEARCH;
         }
 
-        // 7. Short message with no search signal — likely chat
+        // 8. Short message with no search signal — likely chat
         if (trimmed.split("\\s+").length < 5) {
             return Intent.GENERAL_CHAT;
         }
 
-        // 8. Contains known location name
+        // 9. Contains known location name
         if (containsLocationName(trimmed) && trimmed.split("\\s+").length >= 3) {
             return Intent.PROPERTY_SEARCH;
         }
@@ -182,12 +215,17 @@ public class IntentDetector {
         return PROXIMITY_PATTERN.matcher(message.toLowerCase()).find();
     }
 
+    /** Returns true if the query is purely asking for distance/directions. */
+    public boolean isRouteQuery(String message) {
+        if (message == null || message.isBlank()) return false;
+        return ROUTE_PATTERN.matcher(message.trim().toLowerCase()).find();
+    }
+
     public boolean isLocationNameQuery(String message) {
         if (message == null || message.isBlank()) return false;
         String lower = message.trim().toLowerCase()
                 .replaceAll("[?!.]", "").trim();
 
-        // Direct location name questions
         if (lower.matches("(what is |tell me |show me |can you tell me )?my (current )?loc\\w*")) return true;
         if (lower.matches("(what is |where is )?my (current )?location( name)?")) return true;
         if (lower.matches("my location( name)?")) return true;
@@ -195,14 +233,14 @@ public class IntentDetector {
         if (lower.matches("(can you tell|tell) me (my|where i am|my current location).*")) return true;
         if (lower.matches("what.*my.*loc\\w*")) return true;
 
-        // Must NOT contain property search signals
         boolean hasPropertySignal = SEARCH_PATTERN.matcher(lower).find()
                 || lower.contains("property") || lower.contains("flat")
                 || lower.contains("villa") || lower.contains("apartment")
                 || lower.contains("bhk") || lower.contains("find");
 
         return !hasPropertySignal
-                && (lower.contains("my location") || lower.contains("my loc") || lower.contains("where am i"));
+                && (lower.contains("my location") || lower.contains("my loc")
+                    || lower.contains("where am i"));
     }
 
     private boolean containsAmenityKeyword(String query) {
