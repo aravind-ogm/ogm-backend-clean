@@ -6,6 +6,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -56,11 +58,30 @@ public class LiveTourService {
 
         queueRepo.save(queue);
 
-        // 🔥 BROADCAST UPDATE
+        // 🔥 BROADCAST queue count update to customer-facing widget
         messagingTemplate.convertAndSend(
                 "/topic/queue/" + request.getPropertyId(),
                 queueRepo.countByPropertyId(request.getPropertyId())
         );
+
+        // 📲 NOTIFY AGENT — incoming call alert on agent dashboard
+        AgentAvailability agentAvail = agentRepo
+                .findByPropertyId(request.getPropertyId())
+                .orElse(null);
+
+        if (agentAvail != null) {
+            Map<String, Object> incomingCallPayload = new HashMap<>();
+            incomingCallPayload.put("callerName",   request.getName());
+            incomingCallPayload.put("callerMobile",  request.getMobile());
+            incomingCallPayload.put("propertyId",    request.getPropertyId());
+            incomingCallPayload.put("queuePosition", queue.getPosition());
+
+            // Agent dashboard subscribes to: /topic/agent/{agentId}/incoming-call
+            messagingTemplate.convertAndSend(
+                    "/topic/agent/" + agentAvail.getAgentId() + "/incoming-call",
+                    incomingCallPayload
+            );
+        }
 
         // 🎯 CRM Capture
         leadRepo.save(
@@ -110,6 +131,4 @@ public class LiveTourService {
 
         sessionRepo.save(session);
     }
-
-
 }

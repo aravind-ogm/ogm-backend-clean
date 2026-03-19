@@ -27,6 +27,7 @@ public class SecurityConfig {
             "/api/brochure/**",
             "/api/contact/**",
             "/api/live-tour/**",
+            "/api/agent/**",       // ✅ ADDED — agent admin dashboard endpoints
             "/live-queue/**",
             "/"
     };
