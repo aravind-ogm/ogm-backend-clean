@@ -32,18 +32,18 @@ public class AiController {
         this.intentDetector   = intentDetector;
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  EXISTING: General AI Search
+    // ─────────────────────────────────────────────────────────────────────────
+
     @PostMapping("/ask")
     public ResponseEntity<AiChatResponse> askAi(@Valid @RequestBody AiRequest request) {
 
         String  userQuestion = request.getQuestion();
         String  chatId       = request.getChatId();
         boolean hasGps       = request.getUserLatitude()  != null
-                            && request.getUserLongitude() != null;
+                && request.getUserLongitude() != null;
 
-        // ── Route / distance query ────────────────────────────────────────────
-        // Frontend sets isRouteQuery=true when it detects a direction/distance
-        // intent.  We also double-check with IntentDetector in case the flag
-        // is missing (e.g. direct API call, old client).
         boolean isRouteQuery = request.isRouteQuery()
                 || intentDetector.isRouteQuery(userQuestion);
 
@@ -51,17 +51,14 @@ public class AiController {
             log.info("AI — ROUTE_QUERY detected, skipping search. chatId={}, question='{}'",
                     chatId, userQuestion);
 
-            // Store in history so follow-ups have context
             if (chatId != null && !chatId.isBlank()) {
                 addToHistory(chatId, "user", userQuestion);
                 addToHistory(chatId, "ai", "Route shown on map.");
             }
 
-            // Return empty response — the Google Maps DirectionsService on the
-            // frontend draws the route and shows distance + duration in the map panel.
             return ResponseEntity.ok(
                     AiChatResponse.builder()
-                            .message("")           // frontend replaces this with its own route text
+                            .message("")
                             .hasResults(false)
                             .isRouteQuery(true)
                             .properties(List.of())
@@ -69,7 +66,6 @@ public class AiController {
                             .build()
             );
         }
-        // ─────────────────────────────────────────────────────────────────────
 
         IntentDetector.Intent textIntent = intentDetector.detect(userQuestion);
         IntentDetector.Intent intent;
@@ -97,14 +93,13 @@ public class AiController {
                      FOLLOWUP_SEARCH,
                      AMENITY_SEARCH,
                      LOCATION_SEARCH -> handlePropertySearch(request, chatId, hasGps);
-                // ROUTE_QUERY is already handled above — this case is a safety net
                 case ROUTE_QUERY    -> AiChatResponse.builder()
-                                            .message("")
-                                            .hasResults(false)
-                                            .isRouteQuery(true)
-                                            .properties(List.of())
-                                            .followUps(List.of())
-                                            .build();
+                        .message("")
+                        .hasResults(false)
+                        .isRouteQuery(true)
+                        .properties(List.of())
+                        .followUps(List.of())
+                        .build();
                 default             -> handleGeneralChat(userQuestion, chatId);
             };
 
@@ -123,6 +118,79 @@ public class AiController {
                             .properties(List.of())
                             .followUps(List.of())
                             .build());
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  NEW: Property Page Ask — used by AskDiscoverWidget on property details
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @PostMapping("/property-ask")
+    public ResponseEntity<AiChatResponse> propertyAsk(
+            @RequestBody PropertyAskRequest req) {
+
+        try {
+            log.info("AI — PROPERTY_ASK chatId={}, question='{}'",
+                    req.getChatId(), req.getQuestion());
+
+            // Store user message in history
+            if (req.getChatId() != null && !req.getChatId().isBlank()) {
+                addToHistory(req.getChatId(), "user", req.getQuestion());
+            }
+
+            // Build prompt: property context + conversation history + question
+            StringBuilder prompt = new StringBuilder();
+
+            // Property-specific system context sent from the frontend
+            if (req.getSystemContext() != null && !req.getSystemContext().isBlank()) {
+                prompt.append(req.getSystemContext()).append("\n\n");
+            }
+
+            // Append last 6 conversation turns for multi-turn support
+            if (req.getChatId() != null) {
+                List<ChatMessage> history =
+                        chatHistory.getOrDefault(req.getChatId(), List.of());
+                if (history.size() > 1) {
+                    prompt.append("Conversation so far:\n");
+                    int start = Math.max(0, history.size() - 7);
+                    for (int i = start; i < history.size() - 1; i++) {
+                        ChatMessage msg = history.get(i);
+                        prompt.append(msg.getRole().equals("user") ? "User: " : "You: ")
+                                .append(msg.getContent()).append("\n");
+                    }
+                    prompt.append("\n");
+                }
+            }
+
+            prompt.append("User: ").append(req.getQuestion());
+
+            // Call existing GeminiService — same key, same model
+            String reply = geminiService.askGemini(prompt.toString());
+
+            // Store reply in history
+            if (req.getChatId() != null && !req.getChatId().isBlank()) {
+                addToHistory(req.getChatId(), "ai", reply);
+            }
+
+            return ResponseEntity.ok(
+                    AiChatResponse.builder()
+                            .message(reply)
+                            .hasResults(false)
+                            .properties(List.of())
+                            .followUps(List.of())
+                            .build()
+            );
+
+        } catch (Exception e) {
+            log.error("Property ask failed: {}", e.getMessage(), e);
+            return ResponseEntity.ok(
+                    AiChatResponse.builder()
+                            .message("I'm having trouble responding right now. Please try again.")
+                            .hasResults(false)
+                            .properties(List.of())
+                            .followUps(List.of())
+                            .build()
+            );
         }
     }
 
@@ -214,18 +282,18 @@ public class AiController {
             if (hasName) {
                 prompt.append(
                         "\nCUSTOMER LOCATION (verified - do NOT show coordinates to the user):\n"
-                        + "Current location: " + locationName + "\n"
-                        + "When asked what is my location or my location name, reply with the name above.\n"
-                        + "Never show lat/lng numbers in your reply.\n"
-                        + "Reference naturally: near " + shortName + ", in " + shortName
-                        + ", close to your location.\n"
-                        + "Each property below shows its distance from this location.\n");
+                                + "Current location: " + locationName + "\n"
+                                + "When asked what is my location or my location name, reply with the name above.\n"
+                                + "Never show lat/lng numbers in your reply.\n"
+                                + "Reference naturally: near " + shortName + ", in " + shortName
+                                + ", close to your location.\n"
+                                + "Each property below shows its distance from this location.\n");
             } else {
                 prompt.append(
                         "\nCUSTOMER LOCATION (verified - do NOT show coordinates to the user):\n"
-                        + "The customer has shared their GPS location.\n"
-                        + "Refer to it as your current location or near you - never show numbers.\n"
-                        + "Each property below shows its distance from the customer.\n");
+                                + "The customer has shared their GPS location.\n"
+                                + "Refer to it as your current location or near you - never show numbers.\n"
+                                + "Each property below shows its distance from the customer.\n");
             }
         }
 
@@ -238,7 +306,6 @@ public class AiController {
                     """);
         }
 
-        // Conversation history — last 6 turns
         if (chatId != null) {
             List<ChatMessage> history = chatHistory.getOrDefault(chatId, List.of());
             if (!history.isEmpty()) {
@@ -261,7 +328,7 @@ public class AiController {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  HAVERSINE — km distance, used for prompt enrichment only
+    //  HAVERSINE
     // ─────────────────────────────────────────────────────────────────────────
 
     private double haversine(double lat1, double lng1, double lat2, double lng2) {
@@ -275,7 +342,7 @@ public class AiController {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  CHAT HISTORY
+    //  CHAT HISTORY ENDPOINTS
     // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/history/{chatId}")
@@ -300,6 +367,10 @@ public class AiController {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  DTOs
+    // ─────────────────────────────────────────────────────────────────────────
+
     @lombok.Data
     @lombok.AllArgsConstructor
     @lombok.NoArgsConstructor
@@ -307,5 +378,12 @@ public class AiController {
         private String role;
         private String content;
         private long   timestamp;
+    }
+
+    @lombok.Data
+    public static class PropertyAskRequest {
+        private String question;
+        private String chatId;
+        private String systemContext;
     }
 }

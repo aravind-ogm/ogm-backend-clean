@@ -1,6 +1,5 @@
 package com.ogm.market.live;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,7 @@ public class LiveTourService {
     private final LiveSessionRepository sessionRepo;
     private final LiveLeadRepository leadRepo;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ScheduledCallRepository scheduledCallRepo;
 
     // 🔔 Agent Availability
     public AvailabilityResponse getAvailability(Long propertyId) {
@@ -76,11 +76,13 @@ public class LiveTourService {
             incomingCallPayload.put("propertyId",    request.getPropertyId());
             incomingCallPayload.put("queuePosition", queue.getPosition());
 
-            // Agent dashboard subscribes to: /topic/agent/{agentId}/incoming-call
             messagingTemplate.convertAndSend(
                     "/topic/agent/" + agentAvail.getAgentId() + "/incoming-call",
                     incomingCallPayload
             );
+
+            // 📅 AUTO-CREATE upcoming call (15 min from now)
+//            scheduledCallService.autoBookFromQueue(request, agentAvail.getAgentId());
         }
 
         // 🎯 CRM Capture
@@ -94,14 +96,29 @@ public class LiveTourService {
                         .build()
         );
 
+        // 📅 AUTO-CREATE SCHEDULED CALL — 15 minutes from now
+        Long agentId = agentAvail != null ? agentAvail.getAgentId() : null;
+        scheduledCallRepo.save(
+                ScheduledCall.builder()
+                        .agentId(agentId)
+                        .propertyId(request.getPropertyId())
+                        .customerName(request.getName())
+                        .customerMobile(request.getMobile())
+                        .note("Auto-created when customer joined live tour queue")
+                        .scheduledAt(LocalDateTime.now().plusMinutes(15))
+                        .status("UPCOMING")
+                        .source("AUTO_QUEUE")
+                        .build()
+        );
+
         return queue.getPosition();
     }
 
     // 📊 Start Session
     public LiveSession startSession(Long propertyId,
-                                     Long agentId,
-                                     String name,
-                                     String mobile) {
+                                    Long agentId,
+                                    String name,
+                                    String mobile) {
 
         LiveSession session = LiveSession.builder()
                 .propertyId(propertyId)
