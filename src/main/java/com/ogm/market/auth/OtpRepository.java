@@ -1,4 +1,4 @@
-package com.ogm.market.repository;
+package com.ogm.market.auth;
 
 import com.ogm.market.model.Otp;
 import org.springframework.data.jpa.repository.JpaRepository;

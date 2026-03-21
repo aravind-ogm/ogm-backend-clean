@@ -1,9 +1,8 @@
-package com.ogm.market.service;
+package com.ogm.market.auth;
 
 import com.ogm.market.exception.OtpException;
 import com.ogm.market.model.Otp;
-import com.ogm.market.repository.OtpRepository;
-import com.ogm.market.util.OtpUtil;
+import com.ogm.market.service.WhatsAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

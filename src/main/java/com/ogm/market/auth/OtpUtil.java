@@ -1,4 +1,4 @@
-package com.ogm.market.util;
+package com.ogm.market.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

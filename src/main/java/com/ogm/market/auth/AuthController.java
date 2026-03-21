@@ -1,14 +1,7 @@
-package com.ogm.market.controller;
+package com.ogm.market.auth;
 
 import com.ogm.market.config.JwtUtil;
-import com.ogm.market.dto.AuthResponse;
-import com.ogm.market.dto.LoginRequest;
-import com.ogm.market.dto.OtpRequest;
-import com.ogm.market.dto.SignupRequest;
 import com.ogm.market.model.User;
-import com.ogm.market.repository.UserRepository;
-import com.ogm.market.service.AuthService;
-import com.ogm.market.service.OtpService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;

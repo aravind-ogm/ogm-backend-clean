@@ -1,13 +1,9 @@
-package com.ogm.market.service;
+package com.ogm.market.auth;
 
 import com.ogm.market.config.JwtUtil;
-import com.ogm.market.dto.AuthResponse;
-import com.ogm.market.dto.LoginRequest;
-import com.ogm.market.dto.SignupRequest;
 import com.ogm.market.exception.AuthException;
 import com.ogm.market.exception.ConflictException;
 import com.ogm.market.model.User;
-import com.ogm.market.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

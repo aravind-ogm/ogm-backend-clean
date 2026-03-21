@@ -7,7 +7,7 @@ import com.ogm.market.model.ContactForm;
 import com.ogm.market.model.Property;
 import com.ogm.market.repository.PropertyRepository;
 import com.ogm.market.service.BrochureService;
-import com.ogm.market.service.EmailService;
+import com.ogm.market.auth.EmailService;
 import com.ogm.market.service.PropertyService;
 import com.ogm.market.service.StorageService;
 import jakarta.mail.MessagingException;

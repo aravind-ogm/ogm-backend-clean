@@ -1,4 +1,4 @@
-package com.ogm.market.service;
+package com.ogm.market.auth;
 
 import com.ogm.market.model.ContactForm;
 import jakarta.mail.MessagingException;

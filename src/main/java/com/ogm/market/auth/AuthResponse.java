@@ -1,4 +1,4 @@
-package com.ogm.market.dto;
+package com.ogm.market.auth;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
