@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import com.ogm.market.config.JwtUtil;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,11 +23,7 @@ public class AgentService {
     private final ScheduledCallRepository      scheduledCallRepo;
     private final PropertyRepository           propertyRepo;
     private final PasswordEncoder              passwordEncoder;
-
-    // ─── TEMP: Hash generator — delete after use ─────────────────────────────
-    public String hashPassword(String raw) {
-        return passwordEncoder.encode(raw);
-    }
+    private final JwtUtil                      jwtUtil;
 
     // ─── 1. LOGIN ────────────────────────────────────────────────────────────
     public LoginResponse login(LoginRequest request) {
@@ -39,7 +35,7 @@ public class AgentService {
                 .agentId(agent.getId()).name(agent.getName()).email(agent.getEmail())
                 .phone(agent.getPhone()).photoUrl(agent.getPhotoUrl())
                 .designation(agent.getDesignation())
-                .token(UUID.randomUUID().toString()).build();
+                .token(jwtUtil.generateToken(agent.getEmail())).build();
     }
 
     // ─── 2. GET PROFILE ──────────────────────────────────────────────────────
@@ -136,7 +132,7 @@ public class AgentService {
         // Find agent — if not specified, use the one assigned to this property
         Long agentId = req.getAgentId();
         if (agentId == null && req.getPropertyId() != null) {
-            agentId = availabilityRepo.findByPropertyId(req.getPropertyId())
+            agentId = availabilityRepo.findFirstByPropertyId(req.getPropertyId())
                     .map(a -> a.getAgentId()).orElse(null);
         }
 
@@ -156,7 +152,7 @@ public class AgentService {
 
     /** Auto-create upcoming call when customer joins queue */
     public ScheduledCallDto autoBookFromQueue(JoinQueueRequest req, LocalDateTime scheduledAt) {
-        Long agentId = availabilityRepo.findByPropertyId(req.getPropertyId())
+        Long agentId = availabilityRepo.findFirstByPropertyId(req.getPropertyId())
                 .map(a -> a.getAgentId()).orElse(null);
 
         ScheduledCall call = ScheduledCall.builder()

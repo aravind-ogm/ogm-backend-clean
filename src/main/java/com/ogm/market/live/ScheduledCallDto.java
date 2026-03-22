@@ -15,7 +15,8 @@ public class ScheduledCallDto {
     private String customerMobile;
     private String note;
     private LocalDateTime scheduledAt;
-    private String scheduledAtFormatted;  // "Mar 20 • 10:30 AM"
-    private String status;
-    private String source;
+    private String scheduledAtFormatted;  // e.g. "Mar 20 • 10:30 AM"
+    private Long   minutesUntil;          // minutes until scheduled time (for "Up Next" banner)
+    private String status;                // UPCOMING | COMPLETED | CANCELLED
+    private String source;                // CUSTOMER_BOOKING | AGENT_SCHEDULED | AUTO_QUEUE
 }

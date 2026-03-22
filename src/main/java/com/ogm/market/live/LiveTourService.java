@@ -23,7 +23,7 @@ public class LiveTourService {
     public AvailabilityResponse getAvailability(Long propertyId) {
 
         AgentAvailability availability =
-                agentRepo.findByPropertyId(propertyId)
+                agentRepo.findFirstByPropertyId(propertyId)
                         .orElse(null);
 
         Long queueCount = queueRepo.countByPropertyId(propertyId);
@@ -66,7 +66,7 @@ public class LiveTourService {
 
         // 📲 NOTIFY AGENT — incoming call alert on agent dashboard
         AgentAvailability agentAvail = agentRepo
-                .findByPropertyId(request.getPropertyId())
+                .findFirstByPropertyId(request.getPropertyId())
                 .orElse(null);
 
         if (agentAvail != null) {

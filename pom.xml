@@ -22,16 +22,29 @@
         <spring-ai.version>1.0.0-M6</spring-ai.version>
     </properties>
 
-    <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.ai</groupId>-->
-<!--            <artifactId>spring-ai-vertex-ai-gemini-spring-boot-starter</artifactId>-->
-<!--        </dependency>-->
+    <dependencies><!-- ─────────────────────────────────────────────────────────────
 
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.ai</groupId>-->
-<!--            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>-->
-<!--        </dependency>-->
+     ADD THESE 3 DEPENDENCIES to your pom.xml <dependencies> block
+     Use jjwt 0.11.5 — stable and widely used with Spring Boot 3
+     ───────────────────────────────────────────────────────────── -->
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
