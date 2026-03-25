@@ -20,15 +20,28 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    /**
+     * PUBLIC — no JWT required.
+     * Only expose the minimum needed for unauthenticated callers.
+     * /api/agent/** is intentionally NOT here — agents must be authenticated.
+     */
     private static final String[] PUBLIC_PATHS = {
-            "/api/auth/**",
+            // Auth
+            "/api/agent/login",                    // login endpoint
+            "/api/agent/book-call",                // customers book calls (no account)
+            // Properties — public browsing
             "/api/properties/**",
             "/api/ai/**",
             "/api/brochure/**",
             "/api/contact/**",
-            "/api/live-tour/**",
-            "/api/agent/**",       // ✅ ADDED — agent admin dashboard endpoints
+            "/api/auth/**",
+            // Live tour — customer-facing only (no auth)
+            "/api/live-tour/availability/**",      // check if agent is online
+            "/api/live-tour/join-queue",           // customer joins queue
+            "/api/live-tour/jaas-token",           // get JaaS JWT (public — customers need it too)
+            // WebSocket handshake — must be public for SockJS
             "/live-queue/**",
+            // Static
             "/"
     };
 
@@ -40,7 +53,6 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        /* Static resources */
                         .requestMatchers(
                                 new AntPathRequestMatcher("/images/**"),
                                 new AntPathRequestMatcher("/videos/**"),
@@ -48,11 +60,10 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/favicon.ico"),
                                 new AntPathRequestMatcher("/logo.png")
                         ).permitAll()
-                        /* Public API endpoints */
                         .requestMatchers(PUBLIC_PATHS).permitAll()
+                        // Everything else requires a valid JWT
                         .anyRequest().authenticated()
                 )
-                /* JWT filter runs before Spring's username/password filter */
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

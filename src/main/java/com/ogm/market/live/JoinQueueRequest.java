@@ -9,4 +9,5 @@ public class JoinQueueRequest {
     private Long propertyId;
     private String name;
     private String mobile;
+    private String roomName;
 }

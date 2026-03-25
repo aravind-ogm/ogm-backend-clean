@@ -75,6 +75,7 @@ public class LiveTourService {
             incomingCallPayload.put("callerMobile",  request.getMobile());
             incomingCallPayload.put("propertyId",    request.getPropertyId());
             incomingCallPayload.put("queuePosition", queue.getPosition());
+            incomingCallPayload.put("roomName",      request.getRoomName());
 
             messagingTemplate.convertAndSend(
                     "/topic/agent/" + agentAvail.getAgentId() + "/incoming-call",
