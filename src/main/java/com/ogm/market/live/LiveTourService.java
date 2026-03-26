@@ -75,6 +75,7 @@ public class LiveTourService {
             incomingCallPayload.put("callerMobile",  request.getMobile());
             incomingCallPayload.put("propertyId",    request.getPropertyId());
             incomingCallPayload.put("queuePosition", queue.getPosition());
+            // ✅ Pass roomName so agent joins the exact same UUID room as customer
             incomingCallPayload.put("roomName",      request.getRoomName());
 
             messagingTemplate.convertAndSend(
@@ -133,19 +134,20 @@ public class LiveTourService {
     }
 
     // 📊 End Session
+    // Status is derived by AgentService: endedAt != null → "COMPLETED", null → "ACTIVE"
+    // No setStatus() needed — just set endedAt and durationSeconds
     public void endSession(Long sessionId) {
 
         LiveSession session = sessionRepo.findById(sessionId).orElseThrow();
 
-        session.setEndedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        session.setEndedAt(now);
 
-        long duration =
-                java.time.Duration.between(
-                        session.getStartedAt(),
-                        session.getEndedAt()
-                ).getSeconds();
-
-        session.setDurationSeconds(duration);
+        // Duration in SECONDS — not milliseconds
+        long durationSeconds = java.time.Duration.between(
+                session.getStartedAt(), now
+        ).getSeconds();
+        session.setDurationSeconds(durationSeconds);
 
         sessionRepo.save(session);
     }

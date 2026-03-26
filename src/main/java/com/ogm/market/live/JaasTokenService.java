@@ -19,8 +19,6 @@ public class JaasTokenService {
     @Value("${jaas.key-id}")
     private String keyId;
 
-    // Read as a single base64 string — NO PEM headers, NO newlines
-    // Store ONLY the base64 content in application.properties
     @Value("${jaas.private-key-base64}")
     private String privateKeyBase64;
 
@@ -35,10 +33,12 @@ public class JaasTokenService {
         userContext.put("moderator", isModerator);
 
         Map<String, Object> features = new LinkedHashMap<>();
-        features.put("recording",     isModerator);
-        features.put("livestreaming", false);
-        features.put("transcription", false);
-        features.put("outbound-call", false);
+        features.put("recording",      isModerator);  // agent can record
+        features.put("livestreaming",  false);
+        features.put("transcription",  false);
+        features.put("outbound-call",  false);
+        // ✅ File sharing — enabled for both moderator and participant
+        features.put("file-sharing",   true);
 
         Map<String, Object> context = new LinkedHashMap<>();
         context.put("user",     userContext);
@@ -65,7 +65,6 @@ public class JaasTokenService {
     }
 
     private PrivateKey loadPrivateKey(String base64Key) throws Exception {
-        // Strips any accidental whitespace/newlines from the base64 string
         String cleaned = base64Key.replaceAll("[\\s\\n\\r]", "");
         byte[] keyBytes = Base64.getDecoder().decode(cleaned);
         return KeyFactory.getInstance("RSA")
