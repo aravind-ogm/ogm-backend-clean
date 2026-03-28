@@ -118,6 +118,32 @@ public class AISearchServiceImpl implements AISearchService {
             results = postFilter(trySemanticSearch(prompt, limit), filter);
         }
 
+        // ── 8. Last resort: retry WITHOUT price filter to show closest options ──
+        if (results.isEmpty() && filter.getMaxPrice() != null) {
+            AiFilter relaxed = cloneFilter(filter);
+            relaxed.setMaxPrice(null);
+            relaxed.setMinPrice(null);
+            results = tryExtendedSearch(relaxed, limit);
+            if (results.isEmpty()) results = tryKeywordDeepSearch(prompt, relaxed, limit);
+            if (results.isEmpty()) results = postFilter(trySemanticSearch(prompt, limit), relaxed);
+            if (!results.isEmpty()) {
+                // Sort by price ascending so cheapest shows first
+                results = results.stream()
+                        .sorted(Comparator.comparingDouble(p -> p.getPrice() != null ? p.getPrice() : Double.MAX_VALUE))
+                        .collect(Collectors.toList());
+                List<PropertyCardResponse> cards = results.stream()
+                        .limit(limit)
+                        .map(this::toCard)
+                        .collect(Collectors.toList());
+                return AiChatResponse.builder()
+                        .message("I couldn't find exact matches within your budget, but here are the closest available options:")
+                        .properties(cards)
+                        .hasResults(true)
+                        .followUps(generateFollowUps(relaxed, null, cards.size()))
+                        .build();
+            }
+        }
+
         if (results.isEmpty()) {
             return emptyResponse(buildNoResultMessage(filter, amenityList));
         }
@@ -339,6 +365,12 @@ public class AISearchServiceImpl implements AISearchService {
 
     private List<Property> postFilter(List<Property> results, AiFilter f) {
         if (results == null || results.isEmpty()) return Collections.emptyList();
+        // Sort by price ascending when user wants investment/rental focus (cheapest = best yield)
+        if (Boolean.TRUE.equals(f.getInvestmentFocus())) {
+            results = results.stream()
+                    .sorted(Comparator.comparingDouble(p -> p.getPrice() != null ? p.getPrice() : Double.MAX_VALUE))
+                    .collect(Collectors.toList());
+        }
         return results.stream()
                 .filter(p -> matchesType(p.getType(), f.getType()))
                 .filter(p -> matchesBhk(p, f))
@@ -382,7 +414,7 @@ public class AISearchServiceImpl implements AISearchService {
 
     private boolean matchesPrice(Property p, AiFilter f) {
         if (p.getPrice() == null) return true;
-        if (f.getMaxPrice() != null && p.getPrice() > f.getMaxPrice() * 1.10) return false;
+        if (f.getMaxPrice() != null && p.getPrice() > f.getMaxPrice() * 1.30) return false;
         if (f.getMinPrice() != null && p.getPrice() < f.getMinPrice()) return false;
         return true;
     }
@@ -405,8 +437,9 @@ public class AISearchServiceImpl implements AISearchService {
         if (f.getDeveloperName() == null) return true;
         String dev = f.getDeveloperName().toLowerCase();
         if (p.getDeveloperName() != null && p.getDeveloperName().toLowerCase().contains(dev)) return true;
-        if (p.getTitle() != null && p.getTitle().toLowerCase().contains(dev)) return true;
-        if (p.getDescription() != null && p.getDescription().toLowerCase().contains(dev)) return true;
+        if (p.getTitle()       != null && p.getTitle().toLowerCase().contains(dev))           return true;
+        if (p.getDescription() != null && p.getDescription().toLowerCase().contains(dev))     return true;
+        if (p.getLocation()    != null && p.getLocation().toLowerCase().contains(dev))        return true;
         return false;
     }
 
@@ -437,7 +470,10 @@ public class AISearchServiceImpl implements AISearchService {
     }
 
     private boolean matchesListingType(Property p, AiFilter f) {
-        if (f.getListingType() == null || p.getListingType() == null) return true;
+        if (f.getListingType() == null) return true;
+        // If filter is set but property has no listing_type data, exclude it
+        // to avoid showing wrong results (e.g. all properties for "owner only")
+        if (p.getListingType() == null) return false;
         return p.getListingType().toLowerCase().contains(f.getListingType().toLowerCase());
     }
 
