@@ -1,6 +1,8 @@
 package com.ogm.market.config;
 
+import com.ogm.market.broker.GoogleOAuthSuccessHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -13,45 +15,57 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
-    /**
-     * PUBLIC — no JWT required.
-     * Only expose the minimum needed for unauthenticated callers.
-     * /api/agent/** is intentionally NOT here — agents must be authenticated.
-     */
+    private final JwtAuthFilter             jwtAuthFilter;
+    private final GoogleOAuthSuccessHandler googleOAuthSuccessHandler;
+
+    @Value("${app.frontend-url:http://localhost:3000}")
+    private String frontendUrl;
+
     private static final String[] PUBLIC_PATHS = {
-            // Auth
-            "/api/agent/login",                    // login endpoint
-            "/api/agent/book-call",                // customers book calls (no account)
-            // Properties — public browsing
+            "/api/agent/login",
+            "/api/agent/book-call",
+            "/api/broker/verify-phone",
+            "/api/broker/verify-email",
+            "/api/broker/register",
+            "/api/broker/login",
+            "/api/broker/whatsapp-register",
+            "/api/auth/google",
+            "/oauth2/**",
+            "/login/oauth2/**",
             "/api/properties/**",
             "/api/ai/**",
             "/api/brochure/**",
             "/api/contact/**",
             "/api/auth/**",
-            // Live tour — customer-facing only (no auth)
-            "/api/live-tour/availability/**",      // check if agent is online
-            "/api/live-tour/join-queue",           // customer joins queue
-            "/api/live-tour/jaas-token",           // get JaaS JWT (public — customers need it too)
-            // WebSocket handshake — must be public for SockJS
+            "/api/live-tour/availability/**",
+            "/api/live-tour/join-queue",
+            "/api/live-tour/jaas-token",
             "/live-queue/**",
-            // Static
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**",
             "/"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        log.info("[SecurityConfig] Configuring security filter chain with Google OAuth2");
+
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 new AntPathRequestMatcher("/images/**"),
@@ -61,8 +75,18 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/logo.png")
                         ).permitAll()
                         .requestMatchers(PUBLIC_PATHS).permitAll()
-                        // Everything else requires a valid JWT
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(auth ->
+                                auth.baseUri("/oauth2/authorization"))
+                        .redirectionEndpoint(redir ->
+                                redir.baseUri("/login/oauth2/code/*"))
+                        .successHandler(googleOAuthSuccessHandler)
+                        .failureHandler((request, response, exception) -> {
+                            log.error("[GoogleOAuth] FAILURE HANDLER: {}", exception.getMessage(), exception);
+                            response.sendRedirect(frontendUrl + "/broker/register?error=" + exception.getMessage());
+                        })
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

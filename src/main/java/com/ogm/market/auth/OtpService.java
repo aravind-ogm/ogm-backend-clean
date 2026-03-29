@@ -2,7 +2,7 @@ package com.ogm.market.auth;
 
 import com.ogm.market.exception.OtpException;
 import com.ogm.market.model.Otp;
-import com.ogm.market.service.WhatsAppService;
+//import com.ogm.market.service.WhatsAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +20,7 @@ public class OtpService {
 
     private final OtpRepository otpRepository;
     private final EmailService emailService;
-    private final WhatsAppService whatsAppService;
+//    private final WhatsAppService whatsAppService;
 
     /** SecureRandom is thread-safe and cryptographically strong. */
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -82,7 +82,7 @@ public class OtpService {
             if (identifier.contains("@")) {
                 emailService.sendOtp(identifier, otp);
             } else {
-                whatsAppService.sendOtp(identifier, otp);
+//                whatsAppService.sendOtp(identifier, otp);
             }
             log.info("OTP delivered to: {}", masked(identifier));
         } catch (Exception e) {

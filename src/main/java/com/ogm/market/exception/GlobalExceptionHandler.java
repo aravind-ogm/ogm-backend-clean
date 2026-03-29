@@ -12,52 +12,58 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Converts all thrown exceptions into consistent JSON error responses.
- *
- * Without this, Spring returns HTML error pages or noisy stack traces
- * to the frontend. With it, every error looks like:
- *   {"error": "Property not found for slug: xyz"}
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // ── @Valid validation failures ──────────────────────────────────────────
-    // Fired when a @RequestBody field fails a constraint like @NotBlank.
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(
-            MethodArgumentNotValidException ex) {
-
+    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-
         return ResponseEntity.badRequest().body(Map.of("error", message));
     }
 
-    // ── ResponseStatusException (our explicit throws) ───────────────────────
-    // Fired by requireAdmin(), getPropertyBySlug(), processBrochureRequest()
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, String>> handleResponseStatus(
-            ResponseStatusException ex) {
-
-        if (ex.getStatusCode().value() >= 500) {
-            log.error("Server error: {}", ex.getReason(), ex);
-        }
-
+    public ResponseEntity<Map<String, String>> handleResponseStatus(ResponseStatusException ex) {
+        if (ex.getStatusCode().value() >= 500) log.error("Server error: {}", ex.getReason(), ex);
         return ResponseEntity.status(ex.getStatusCode())
-                .body(Map.of("error", ex.getReason() != null
-                        ? ex.getReason()
-                        : ex.getMessage()));
+                .body(Map.of("error", ex.getReason() != null ? ex.getReason() : ex.getMessage()));
     }
 
-    // ── Catch-all ───────────────────────────────────────────────────────────
+    // ── Custom exceptions — all return clean JSON ─────────────────────
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, String>> handleConflict(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<Map<String, String>> handleAuth(AuthException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(OtpException.class)
+    public ResponseEntity<Map<String, String>> handleOtp(OtpException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    // ── Catch-all ─────────────────────────────────────────────────────
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneral(Exception ex) {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "An unexpected error occurred. Please try again."));
+                .body(Map.of("error", "Something went wrong. Please try again."));
     }
 }
