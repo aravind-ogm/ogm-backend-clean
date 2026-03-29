@@ -38,22 +38,35 @@ public class WhatsAppRegisterController {
         // Skip if email is empty
         if (req.getEmail() == null || req.getEmail().isBlank()) {
             return ResponseEntity.ok(Map.of(
-                "success", false,
-                "message", "No email provided"
+                    "success", false,
+                    "message", "No email provided"
             ));
         }
 
         try {
-            // Check if already registered — avoid duplicates
-            if (brokerRepository.existsByEmail(req.getEmail())) {
-                // Already exists — just send confirmation email again
-                brokerRepository.findByEmail(req.getEmail()).ifPresent(broker -> {
-                    emailService.sendWhatsAppConfirmationEmail(broker);
-                    log.info("[WhatsApp] Resent confirmation to existing broker email={}", req.getEmail());
-                });
+            // Check if already registered — avoid duplicates by email OR mobile
+            boolean emailExists  = brokerRepository.existsByEmail(req.getEmail());
+            boolean mobileExists = req.getMobile() != null &&
+                    !req.getMobile().isBlank() &&
+                    brokerRepository.existsByMobile(req.getMobile());
+
+            if (emailExists || mobileExists) {
+                // Already exists — just send confirmation email
+                String lookup = emailExists ? req.getEmail() : null;
+                if (lookup != null) {
+                    brokerRepository.findByEmail(lookup).ifPresent(broker -> {
+                        emailService.sendWhatsAppConfirmationEmail(broker);
+                        log.info("[WhatsApp] Resent confirmation to existing broker email={}", req.getEmail());
+                    });
+                } else {
+                    brokerRepository.findByMobile(req.getMobile()).ifPresent(broker -> {
+                        emailService.sendWhatsAppConfirmationEmail(broker);
+                        log.info("[WhatsApp] Resent confirmation to existing broker mobile={}", req.getMobile());
+                    });
+                }
                 return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Confirmation email sent"
+                        "success", true,
+                        "message", "Confirmation email sent"
                 ));
             }
 
@@ -88,16 +101,16 @@ public class WhatsAppRegisterController {
             log.info("[WhatsApp] Broker saved and emails sent: id={}", saved.getId());
 
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "brokerId", saved.getId().toString(),
-                "message", "Registration received. Confirmation email sent."
+                    "success", true,
+                    "brokerId", saved.getId().toString(),
+                    "message", "Registration received. Confirmation email sent."
             ));
 
         } catch (Exception e) {
             log.error("[WhatsApp] Error processing registration: {}", e.getMessage());
             return ResponseEntity.ok(Map.of(
-                "success", false,
-                "message", "Could not process registration"
+                    "success", false,
+                    "message", "Could not process registration"
             ));
         }
     }
