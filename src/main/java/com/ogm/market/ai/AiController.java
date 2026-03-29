@@ -223,8 +223,19 @@ public class AiController {
             propertyContext = ctx.toString();
         }
 
-        String aiMessage = geminiService.askGemini(
-                buildPrompt(chatId, request, propertyContext, true, hasGps));
+        String aiMessage;
+        if (searchResponse.isHasResults() && !searchResponse.getProperties().isEmpty()) {
+            // Properties found — use a brief intro; cards show all details
+            // Only call Gemini for the conversational intro, keeping it very short
+            int count = searchResponse.getProperties().size();
+            String locationHint = buildLocationHint(request);
+            aiMessage = geminiService.askGemini(
+                    buildPrompt(chatId, request, propertyContext, true, hasGps));
+        } else {
+            // No results — Gemini explains and suggests alternatives
+            aiMessage = geminiService.askGemini(
+                    buildPrompt(chatId, request, propertyContext, true, hasGps));
+        }
         searchResponse.setMessage(aiMessage);
         return searchResponse;
     }
@@ -262,16 +273,23 @@ public class AiController {
                 a premium property platform in India.
                 
                 RULES:
-                - Be concise, friendly, and professional
-                - Use bullet points for property details
+                - You are a warm, knowledgeable real estate advisor — respond like a human expert
                 - Do NOT use markdown code blocks (no ```)
                 - Do NOT invent properties that were not provided to you
-                - If properties are provided, introduce them naturally with key details
-                - If no properties match, suggest adjusting the search radius or criteria
+                - NEVER list property names, prices, locations or sizes as bullet points — the cards already show those details
                 - NEVER say "I don't have access to your location" — the customer has already shared it
-                - NEVER show raw GPS coordinates like 15.174200, 77.372300 in your reply
-                - When asked "what is my location?" answer with the location NAME, not numbers
-                - If no location name is available, say "your current location" or "near you"
+                - NEVER show raw GPS coordinates in your reply
+                - When asked about location, answer with the location NAME only
+                
+                WHEN PROPERTIES ARE FOUND — write a 3-4 sentence conversational paragraph that:
+                1. Acknowledges the search (e.g. "I found X properties matching your criteria")
+                2. Highlights what makes these results stand out — mention key themes like location benefits, price range, size, RERA status, lifestyle fit
+                3. Gives a genuine recommendation or insight (e.g. which area has better value, what type suits their need)
+                4. Ends with a friendly invitation to explore or ask follow-up questions
+                
+                Example (RERA query): "I've found 18 RERA-approved properties across Bengaluru — all verified for full legal transparency. The options range from affordable 2BHKs in Whitefield starting at ₹56L to premium villas and penthouses in Koramangala and MG Road. RERA approval means you're protected with clear timelines, escrow accounts, and no hidden charges. Scroll through the cards below and let me know if you'd like to narrow down by area, budget, or size!"
+                
+                WHEN NO PROPERTIES MATCH — explain clearly why and suggest 2 specific alternatives"
                 """);
 
         if (hasGps) {
@@ -325,6 +343,13 @@ public class AiController {
 
         prompt.append("\nUser: ").append(request.getQuestion());
         return prompt.toString();
+    }
+
+    private String buildLocationHint(AiRequest request) {
+        if (request.getUserLocationName() != null && !request.getUserLocationName().isBlank()) {
+            return " near " + request.getUserLocationName().split(",")[0].trim();
+        }
+        return "";
     }
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -12,11 +12,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableMethodSecurity
@@ -43,7 +46,8 @@ public class SecurityConfig {
             "/oauth2/**",
             "/login/oauth2/**",
             "/api/properties/**",
-            "/api/ai/**",
+            "/api/ai/**",              // ← AI chat with /api prefix
+            "/ai/**",                  // ← AI chat without /api prefix (direct calls)
             "/api/brochure/**",
             "/api/contact/**",
             "/api/auth/**",
@@ -64,8 +68,16 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
+
+                /*
+                 * FIX: Use IF_REQUIRED for OAuth2 broker flows (needs session),
+                 * but return 401 JSON for unauthenticated API calls instead of
+                 * redirecting to Google OAuth. This prevents /api/ai/ask from
+                 * being hijacked by LoginUrlAuthenticationEntryPoint.
+                 */
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 new AntPathRequestMatcher("/images/**"),
@@ -77,6 +89,18 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .anyRequest().authenticated()
                 )
+
+                /*
+                 * KEY FIX: Replace the default LoginUrlAuthenticationEntryPoint
+                 * (which redirects to /oauth2/authorization/google) with a custom
+                 * entry point that returns HTTP 401 JSON for API calls.
+                 * Browser-based OAuth2 flows (broker login) still work because
+                 * those routes are in PUBLIC_PATHS or handled by oauth2Login below.
+                 */
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(apiAuthenticationEntryPoint())
+                )
+
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(auth ->
                                 auth.baseUri("/oauth2/authorization"))
@@ -91,6 +115,33 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Custom entry point: API calls that reach a protected route without auth
+     * get a clean 401 JSON response — NOT a redirect to Google OAuth.
+     *
+     * This fixes: POST /api/ai/ask → redirect to https://accounts.google.com/...
+     */
+    @Bean
+    public AuthenticationEntryPoint apiAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            String path = request.getRequestURI();
+            log.warn("[SecurityConfig] Unauthenticated request to {}: {}", path, authException.getMessage());
+
+            // API/AI requests get JSON 401, never a redirect
+            if (path.startsWith("/api/") || path.startsWith("/ai/")) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        "{\"error\":\"Unauthorized\",\"message\":\"" + authException.getMessage() + "\",\"path\":\"" + path + "\"}"
+                );
+                return;
+            }
+
+            // Non-API requests (browser routes) → redirect to Google OAuth as before
+            response.sendRedirect("/oauth2/authorization/google");
+        };
     }
 
     @Bean
