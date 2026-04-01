@@ -16,31 +16,27 @@ public class WebCorsConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Allow all required origins (www + non-www + http + https)
+        // ✅ Allowed Origins (Production + Local + Mac + Mobile)
         config.setAllowedOriginPatterns(List.of(
                 "https://oneglobalmarketplace.com",
                 "https://www.oneglobalmarketplace.com",
-                "http://oneglobalmarketplace.com",
-                "http://www.oneglobalmarketplace.com",
-                "http://localhost:3000"
+                "https://api.oneglobalmarketplace.com",
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173"
         ));
 
         // ✅ Allow all HTTP methods
-        config.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "OPTIONS"
-        ));
+        config.setAllowedMethods(List.of("*"));
 
         // ✅ Allow all headers
         config.setAllowedHeaders(List.of("*"));
 
-        // ✅ Important for modern browsers & mobile
+        // ✅ Allow cookies / authorization headers
         config.setAllowCredentials(true);
 
-        // ✅ Cache preflight response for 1 hour (improves mobile performance)
+        // ✅ Important for mobile & Mac (preflight cache)
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
