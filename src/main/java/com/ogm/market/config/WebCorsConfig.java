@@ -13,37 +13,23 @@ public class WebCorsConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Allowed Origins (Production + Local + Mac + Mobile)
         config.setAllowedOriginPatterns(List.of(
                 "https://oneglobalmarketplace.com",
                 "https://www.oneglobalmarketplace.com",
-                "https://api.oneglobalmarketplace.com",
-                "http://localhost:3000",
-                "http://127.0.0.1:3000",
-                "http://localhost:5173",
-                "http://127.0.0.1:5173"
+                "https://ogm-backend-clean-879813720468.asia-south1.run.app",
+                "http://localhost:3000"
         ));
 
-        // ✅ Allow all HTTP methods
-        config.setAllowedMethods(List.of("*"));
-
-        // ✅ Allow all headers
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-
-        // ✅ Allow cookies / authorization headers
         config.setAllowCredentials(true);
 
-        // ✅ Important for mobile & Mac (preflight cache)
-        config.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
         return source;
     }
+
 }
