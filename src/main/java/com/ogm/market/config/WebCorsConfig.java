@@ -16,8 +16,8 @@ public class WebCorsConfig {
 
     // Set via environment variable in production:
     // CORS_ORIGINS=https://oneglobalmarketplace.com,https://www.oneglobalmarketplace.com
-    @Value("${cors.allowed-origins:http://localhost:3000}")
-//    @Value("${cors.allowed-origins:https://oneglobalmarketplace.com,https://www.oneglobalmarketplace.com}")
+    // @Value("${cors.allowed-origins:http://localhost:3000}")
+   @Value("${cors.allowed-origins:https://oneglobalmarketplace.com,https://www.oneglobalmarketplace.com}")
     private String allowedOriginsStr;
 
     @Bean
