@@ -13,11 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Maps exactly to your Supabase `brokers` table.
- * operating_areas and property_types are stored as JSONB arrays.
- */
-
 @Entity
 @Table(name = "brokers")
 @Getter
@@ -30,7 +25,7 @@ public class Broker {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    @Column(name = "id", updatable = false, nullable = false) // removed columnDefinition = "uuid"
     private UUID id;
 
     @Column(name = "full_name", nullable = false, length = 150)
@@ -52,12 +47,12 @@ public class Broker {
     private String officeAddress;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "operating_areas", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "operating_areas", nullable = false, columnDefinition = "TEXT") // changed from jsonb
     @Builder.Default
     private List<String> operatingAreas = new ArrayList<>();
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "property_types", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "property_types", nullable = false, columnDefinition = "TEXT") // changed from jsonb
     @Builder.Default
     private List<String> propertyTypes = new ArrayList<>();
 
@@ -132,7 +127,6 @@ public class Broker {
         LOCAL, GOOGLE, WHATSAPP, EMAIL
     }
 
-    // IMPORTANT — This fixes your NULL ID problem
     @PrePersist
     public void ensureId() {
         if (this.id == null) {
