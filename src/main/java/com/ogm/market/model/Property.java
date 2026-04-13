@@ -16,8 +16,14 @@ import java.util.List;
                 @Index(name = "idx_property_type", columnList = "type"),
                 @Index(name = "idx_property_price", columnList = "price"),
                 @Index(name = "idx_property_bedrooms", columnList = "bedrooms"),
+                @Index(name = "idx_property_bhk", columnList = "bhk"),
                 @Index(name = "idx_property_developer", columnList = "developer_name"),
-                @Index(name = "idx_property_possession", columnList = "possession_status")
+                @Index(name = "idx_property_possession", columnList = "possession_status"),
+                @Index(name = "idx_property_rera", columnList = "rera_approved"),
+                @Index(name = "idx_property_vastu", columnList = "vastu_compliant"),
+                @Index(name = "idx_property_listing_type", columnList = "listing_type"),
+                @Index(name = "idx_property_resale", columnList = "resale"),
+                @Index(name = "idx_property_loc_price", columnList = "location, price")
         }
 )
 @Getter
@@ -57,28 +63,39 @@ public class Property {
     @Column(name = "brochure_file", length = 1000)
     private String brochureFile;
 
-    /* ─── MAIN IMAGES ─────────────────────────────────────────────── */
+    @Column(name = "bhk", length = 20)
+    private String bhk;
+
     @Builder.Default
-    @ElementCollection
-    @CollectionTable(name = "property_main_images", joinColumns = @JoinColumn(name = "property_id"))
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "property_main_images",
+            joinColumns = @JoinColumn(name = "property_id"),
+            indexes = @Index(name = "idx_main_images_prop", columnList = "property_id")
+    )
     @Column(name = "main_image_url", length = 1000)
     private List<String> mainImages = new ArrayList<>();
 
-    /* ─── GALLERY IMAGES ──────────────────────────────────────────── */
     @Builder.Default
-    @ElementCollection
-    @CollectionTable(name = "property_images", joinColumns = @JoinColumn(name = "property_id"))
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "property_images",
+            joinColumns = @JoinColumn(name = "property_id"),
+            indexes = @Index(name = "idx_gallery_prop", columnList = "property_id")
+    )
     @Column(name = "image_url", length = 1000)
     private List<String> images = new ArrayList<>();
 
-    /* ─── AMENITIES ───────────────────────────────────────────────── */
     @Builder.Default
-    @ElementCollection
-    @CollectionTable(name = "property_amenities", joinColumns = @JoinColumn(name = "property_id"))
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "property_amenities",
+            joinColumns = @JoinColumn(name = "property_id"),
+            indexes = @Index(name = "idx_amenities_prop", columnList = "property_id")
+    )
     @Column(name = "amenity")
     private List<String> amenities = new ArrayList<>();
 
-    /* ─── PROPERTY DETAILS ────────────────────────────────────────── */
     private Integer bedrooms;
     private Integer bathrooms;
 
@@ -106,13 +123,15 @@ public class Property {
     private Double latitude;
     private Double longitude;
 
-    /* ─── NEARBY LOCATIONS ────────────────────────────────────────── */
     @Builder.Default
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "property_nearby", joinColumns = @JoinColumn(name = "property_id"))
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "property_nearby",
+            joinColumns = @JoinColumn(name = "property_id"),
+            indexes = @Index(name = "idx_nearby_prop", columnList = "property_id")
+    )
     private List<NearbyLocation> nearby = new ArrayList<>();
 
-    /* ─── SEO SLUG ────────────────────────────────────────────────── */
     @Column(unique = true, nullable = false, length = 150)
     private String slug;
 
@@ -134,14 +153,28 @@ public class Property {
     @Column(name = "resale")
     private Boolean resale;
 
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private boolean active = true;
+
+    @Column(name = "embedding", columnDefinition = "vector(768)")
+    private float[] embedding;
+
     @PrePersist
     @PreUpdate
     public void prepareData() {
-        if (this.title != null) this.title = this.title.trim();
+        if (this.title != null) {
+            this.title = this.title.trim();
+        }
         if ((this.slug == null || this.slug.isBlank()) && this.title != null) {
             this.slug = this.title.toLowerCase()
                     .replaceAll("[^a-z0-9]+", "-")
                     .replaceAll("(^-|-$)", "");
+        }
+        if ((this.bhk == null || this.bhk.isBlank())
+                && this.bedrooms != null
+                && this.bedrooms > 0) {
+            this.bhk = String.valueOf(this.bedrooms);
         }
     }
 
@@ -162,10 +195,38 @@ public class Property {
         if (price == null) return null;
         if (price >= 10_000_000) return String.format("₹%.2f Cr", price / 10_000_000);
         if (price >= 100_000) return String.format("₹%.2f L", price / 100_000);
-        return "₹" + price;
+        return "₹" + price.longValue();
     }
 
-    @Basic(fetch = FetchType.LAZY)
-    @Column(name = "embedding", columnDefinition = "vector(768)")
-    private float[] embedding;
+    public String getBhkDisplay() {
+        if (bhk != null && !bhk.isBlank()) {
+            return bhk.contains("BHK") || bhk.contains("bhk") ? bhk : bhk + " BHK";
+        }
+        if (bedrooms != null && bedrooms > 0) {
+            return bedrooms + " BHK";
+        }
+        return null;
+    }
+
+    public String getSearchableText() {
+        StringBuilder sb = new StringBuilder();
+        appendIfNotNull(sb, title);
+        appendIfNotNull(sb, location);
+        appendIfNotNull(sb, type);
+        appendIfNotNull(sb, description);
+        appendIfNotNull(sb, furnishing);
+        appendIfNotNull(sb, facing);
+        appendIfNotNull(sb, possessionStatus);
+        appendIfNotNull(sb, developerName);
+        if (Boolean.TRUE.equals(vastuCompliant)) sb.append("vastu compliant ");
+        if (reraApproved) sb.append("rera approved ");
+        if (amenities != null) {
+            amenities.forEach(a -> sb.append(a).append(" "));
+        }
+        return sb.toString().trim();
+    }
+
+    private void appendIfNotNull(StringBuilder sb, String value) {
+        if (value != null && !value.isBlank()) sb.append(value).append(" ");
+    }
 }

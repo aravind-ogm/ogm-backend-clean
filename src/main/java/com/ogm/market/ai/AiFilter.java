@@ -1,38 +1,37 @@
 package com.ogm.market.ai;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 import java.util.List;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AiFilter {
 
-    private String city;
+    // ── Location ────────────────────────────────────────────────────────────
+    private String       city;
+    private String       location;
+    private List<String> locations;       // multiple areas: "Koramangala, Whitefield, HSR"
+    private Double       distanceKm;
+    private String       referenceLocation;
+    private Boolean      useCurrentLocation;
 
-    private String location;
+    // ── BHK ─────────────────────────────────────────────────────────────────
+    private String       bhk;             // single BHK as string e.g. "3"
+    private List<Integer> bhkList;        // multiple: [2, 3]
 
-    private List<String> locations;
+    // ── Price ────────────────────────────────────────────────────────────────
+    private Double       minPrice;        // in INR
+    private Double       maxPrice;        // in INR
 
-    private Double distanceKm;
-
-    private String referenceLocation;
-
-    private Boolean useCurrentLocation;
-
-    private String bhk;
-
-    private List<Integer> bhkList;
-
-    private Double minPrice;
-
-    private Double maxPrice;
-
+    // ── Property attributes ──────────────────────────────────────────────────
     /** villa / apartment / flat / plot / land / penthouse / duplex / farmhouse / commercial / holiday */
     private String type;
 
@@ -43,30 +42,24 @@ public class AiFilter {
     private String furnishing;
 
     private Boolean reraApproved;
-
     private Integer minSqft;
-
     private Integer maxSqft;
-
-    private String developerName;
-
+    private String  developerName;
     private List<String> amenities;
-
     private Boolean vastuCompliant;
 
     /**
      * Possession / project status:
      *   ready_to_move | new_launch | under_construction | pre_launch
      */
-    private String possessionStatus;
-
-    private String possessionBefore;
+    private String  possessionStatus;
+    private String  possessionBefore;  // ISO date "YYYY-MM-DD"
 
     /**
      * Listing source filter:
-     *   owner | developer | builder | any (default)
+     *   owner | developer | any (default)
      */
-    private String listingType;
+    private String  listingType;
 
     /** true → exclude resale; only new/direct-from-developer listings */
     private Boolean newProjectOnly;
@@ -77,15 +70,18 @@ public class AiFilter {
     private Integer maxResults;
 
     /** Generic fallback search term for anything not covered above */
-    private String keyword;
+    private String  keyword;
 
+    // ── Injected at runtime (not from Gemini) ────────────────────────────────
     /** Injected from AiRequest when useCurrentLocation == true */
     private Double userLatitude;
-
     private Double userLongitude;
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  COMPUTED HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
 
-    /** Returns the primary BHK as an Integer, sourcing bhkList[0] or bhk field. */
+    /** Returns the primary BHK as Integer, sourcing bhkList[0] or bhk field. */
     public Integer getPrimaryBhk() {
         if (bhkList != null && !bhkList.isEmpty()) return bhkList.get(0);
         return getBhkAsInteger();
@@ -106,7 +102,7 @@ public class AiFilter {
         return distanceKm != null && distanceKm > 0;
     }
 
-    /** Parse single bhk string to Integer safely */
+    /** Parse single bhk string to Integer safely. */
     public Integer getBhkAsInteger() {
         if (bhk == null || bhk.isBlank()) return null;
         try {
@@ -127,7 +123,7 @@ public class AiFilter {
     public List<String> getEffectiveLocations() {
         if (locations != null && !locations.isEmpty()) return locations;
         if (location != null && !location.isBlank()) return List.of(location);
-        if (city    != null && !city.isBlank())     return List.of(city);
+        if (city     != null && !city.isBlank())     return List.of(city);
         return List.of();
     }
 }

@@ -1,8 +1,10 @@
 package com.ogm.market.controller;
 
+import com.ogm.market.ai.EmbeddingService;
 import com.ogm.market.dto.BrochureRequest;
 import com.ogm.market.dto.PropertyRequest;
 import com.ogm.market.dto.PropertyResponse;
+import com.ogm.market.exception.ResourceNotFoundException;
 import com.ogm.market.model.ContactForm;
 import com.ogm.market.model.Property;
 import com.ogm.market.repository.PropertyRepository;
@@ -26,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -56,9 +59,6 @@ public class PropertyController {
         this.backendUrl = backendUrl;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  BROCHURE
-    // ─────────────────────────────────────────────────────────────────────────
 
     @PostMapping("/brochure/request")
     public ResponseEntity<?> requestBrochure(@RequestBody BrochureRequest req) {
@@ -102,10 +102,6 @@ public class PropertyController {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  CONTACT
-    // ─────────────────────────────────────────────────────────────────────────
-
     @PostMapping("/contact/send")
     public ResponseEntity<String> sendMessage(@RequestBody ContactForm form) {
         try {
@@ -116,10 +112,6 @@ public class PropertyController {
             return ResponseEntity.status(500).body("Failed to send email");
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  PROPERTY SEARCH & CRUD
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/properties")
     public Page<PropertyResponse> search(
@@ -142,9 +134,9 @@ public class PropertyController {
     }
 
     @GetMapping("/properties/slug/{slug}")
-    public ResponseEntity<Property> getPropertyBySlug(@PathVariable String slug) {
-        return propertyRepository.findBySlug(slug)
-                .map(ResponseEntity::ok)
+    public ResponseEntity<PropertyResponse> getPropertyBySlug(@PathVariable String slug) {
+        return propertyRepository.findBySlugAndActiveTrue(slug)
+                .map(p -> ResponseEntity.ok(propertyService.toResponse(p)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -166,10 +158,6 @@ public class PropertyController {
         return ResponseEntity.noContent().build();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  FILE UPLOADS
-    // ─────────────────────────────────────────────────────────────────────────
-
     @PostMapping("/properties/{id}/upload-image")
     public ResponseEntity<String> uploadImage(@PathVariable Long id,
                                               @RequestParam("file") MultipartFile file) {
@@ -188,4 +176,22 @@ public class PropertyController {
         return ResponseEntity.ok(storageService.store(file, "properties/" + id + "/video"));
     }
 
+    @PatchMapping("/properties/{id}/visibility")
+    public ResponseEntity<Map<String, Object>> setVisibility(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+
+        Property p = propertyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found: " + id));
+
+        p.setActive(active);
+        propertyRepository.save(p);
+
+        log.info("Property id={} visibility set to active={}", id, active);
+        return ResponseEntity.ok(Map.of(
+                "id", id,
+                "active", active,
+                "title", p.getTitle()
+        ));
+    }
 }

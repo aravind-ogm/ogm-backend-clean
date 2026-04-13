@@ -1,40 +1,43 @@
 package com.ogm.market.ai;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.List;
+
+/**
+ * Request body for the Gemini Embedding API.
+ * Used by EmbeddingService to serialize POST body.
+ */
+@Data
 public class GeminiEmbeddingRequest {
 
-    private Content content;
+    @JsonProperty("model")
+    private final String model;
 
-    public GeminiEmbeddingRequest(String text) {
+    @JsonProperty("content")
+    private final Content content;
+
+    public GeminiEmbeddingRequest(String modelName, String text) {
+        this.model   = "models/" + modelName;
         this.content = new Content(text);
     }
 
-    public Content getContent() {
-        return content;
-    }
+    @Data
+    public static class Content {
 
-    static class Content {
-
-        private Part[] parts;
+        @JsonProperty("parts")
+        private final List<Part> parts;
 
         public Content(String text) {
-            this.parts = new Part[]{new Part(text)};
-        }
-
-        public Part[] getParts() {
-            return parts;
+            this.parts = List.of(new Part(text));
         }
     }
 
-    static class Part {
+    @Data
+    public static class Part {
 
-        private String text;
-
-        public Part(String text) {
-            this.text = text;
-        }
-
-        public String getText() {
-            return text;
-        }
+        @JsonProperty("text")
+        private final String text;
     }
 }
