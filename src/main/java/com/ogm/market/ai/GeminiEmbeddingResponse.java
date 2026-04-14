@@ -7,16 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * Deserialized response from the Gemini Embedding API.
- *
- * Sample response shape:
- * {
- *   "embedding": {
- *     "values": [0.013168, -0.008711, ...]
- *   }
- * }
- */
+
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -18,9 +18,6 @@ import java.util.Map;
 public class GeminiService {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
-
-    // BUG FIX: 800 was too low for conversational responses — truncated mid-sentence.
-    // JSON extraction still uses 600 (enough for structured output).
     private static final int CHAT_MAX_TOKENS   = 1500;
     private static final int FILTER_MAX_TOKENS = 600;
 
@@ -33,33 +30,11 @@ public class GeminiService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper  = new ObjectMapper();
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  PUBLIC: Conversational reply — simple one-shot (backward compatible)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Simple one-shot prompt. Used by handleGeneralChat and property-ask.
-     * The caller is responsible for building the full prompt string.
-     *
-     * BUG FIX: original returned "{}" on error — users saw literal "{}" as
-     * the AI response. Now returns a human-readable fallback message.
-     */
     public String askGemini(String prompt) {
         return callGemini(null, singleTurn(prompt), 0.7, CHAT_MAX_TOKENS, false);
     }
 
-    /**
-     * Multi-turn conversational reply with proper Gemini API structure.
-     *
-     * BUG FIX: Original crammed systemInstruction + history into one flat text block.
-     * Gemini has a dedicated systemInstruction field and expects history as an
-     * alternating user/model contents array. Using this correctly gives 40-50%
-     * better response quality and proper context retention.
-     *
-     * @param systemInstruction The system prompt / persona / rules for this session
-     * @param history           Previous turns (AiController.ChatMessage list)
-     * @param userQuestion      The current user question (NOT yet in history)
-     */
+
     public String askGemini(String systemInstruction,
                             List<AiController.ChatMessage> history,
                             String userQuestion) {
@@ -68,14 +43,6 @@ public class GeminiService {
         return callGemini(systemInstruction, contents, 0.7, CHAT_MAX_TOKENS, false);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  PUBLIC: Structured filter extraction
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Uses Gemini to parse a natural-language property query into a structured AiFilter.
-     * Temperature 0.1 for deterministic, schema-compliant JSON output.
-     */
     public AiFilter extractFilters(String userQuery) {
         String prompt = buildFilterExtractionPrompt(userQuery);
         try {
@@ -105,19 +72,6 @@ public class GeminiService {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  PRIVATE: Low-level Gemini call
-    //
-    //  BUG FIX SUMMARY:
-    //  1. systemInstruction now uses the dedicated Gemini API field — not mixed
-    //     into the user message text. This dramatically improves response quality.
-    //  2. History is now passed as a proper alternating user/model contents array,
-    //     not as plain text. This enables true multi-turn conversation.
-    //  3. "{}" is no longer returned for chat responses — callers now get a
-    //     human-readable error message instead.
-    //  4. jsonMode flag: when true, error fallback returns "{}" (safe for JSON
-    //     extraction). When false, returns a human-readable message (for chat).
-    // ─────────────────────────────────────────────────────────────────────────
 
     private String callGemini(String systemInstruction,
                               List<Map<String, Object>> contents,
@@ -127,13 +81,8 @@ public class GeminiService {
         try {
             String fullUrl = apiUrl + "?key=" + apiKey;
 
-            // BUG FIX: Use HashMap (not Map.of) to allow null values and conditionally
-            // add systemInstruction only when present
             Map<String, Object> requestBody = new HashMap<>();
 
-            // ── systemInstruction: Gemini's dedicated field for system prompts ──
-            // Original code mixed this into the user message text, which confused
-            // the model and reduced response quality significantly.
             if (systemInstruction != null && !systemInstruction.isBlank()) {
                 requestBody.put("systemInstruction", Map.of(
                         "parts", List.of(Map.of("text", systemInstruction))

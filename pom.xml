@@ -19,14 +19,10 @@
 
     <properties>
         <java.version>17</java.version>
-
     </properties>
 
     <dependencies>
 
-        <!-- ══════════════════════════════════════════════════
-             CORE SPRING BOOT
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -57,9 +53,6 @@
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             SECURITY & AUTH
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -70,18 +63,19 @@
             <artifactId>spring-boot-starter-oauth2-client</artifactId>
         </dependency>
 
-
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.11.5</version>
         </dependency>
+
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
+
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -89,9 +83,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             DATABASE
-        ══════════════════════════════════════════════════ -->
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -103,9 +95,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             EMAIL & NOTIFICATIONS
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
@@ -122,9 +111,7 @@
             <version>9.14.1</version>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             JSON & SERIALIZATION
-        ══════════════════════════════════════════════════ -->
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -135,29 +122,18 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             FILE UPLOAD
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.5</version>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             API DOCS
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.3.0</version>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             LOMBOK
-             BUG FIX: was declared TWICE — once managed by Spring Boot parent
-             and once with explicit version 1.18.30. Kept as optional only.
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -165,12 +141,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             LOGGING
-             Note: slf4j and logback are already provided by spring-boot-starter.
-             Explicit versions below only needed if you want to override.
-             Keeping them won't break anything but are redundant.
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -183,9 +153,6 @@
             <version>1.4.11</version>
         </dependency>
 
-        <!-- ══════════════════════════════════════════════════
-             TEST
-        ══════════════════════════════════════════════════ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -197,15 +164,19 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
                 <configuration>
-                    <excludes>
-                        <exclude>
+                    <source>17</source>
+                    <target>17</target>
+                    <annotationProcessorPaths>
+                        <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
+                            <version>1.18.30</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

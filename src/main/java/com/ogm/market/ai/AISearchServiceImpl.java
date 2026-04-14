@@ -19,7 +19,6 @@ public class AISearchServiceImpl implements AISearchService {
     private static final Logger log = LoggerFactory.getLogger(AISearchServiceImpl.class);
     private static final int DEFAULT_MAX  = 6;
     private static final int HARD_CAP     = 20;
-    // BUG FIX: was 1.30 (30% over budget shown) — tightened to 10%
     private static final double PRICE_TOLERANCE = 1.10;
 
     private final PropertyRepository  repository;
@@ -40,10 +39,6 @@ public class AISearchServiceImpl implements AISearchService {
         this.intentDetector   = intentDetector;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  ENTRY POINT
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Override
     public AiChatResponse search(AiRequest request) {
         String prompt = request.getQuestion();
@@ -61,22 +56,17 @@ public class AISearchServiceImpl implements AISearchService {
             filter.setUserLongitude(request.getUserLongitude());
 
             if (Boolean.TRUE.equals(filter.getUseCurrentLocation())) {
-                // User explicitly said "near me" / "nearby" — apply radius
                 if (filter.getDistanceKm() == null) {
-                    filter.setDistanceKm(15.0); // sensible default for Bengaluru
+                    filter.setDistanceKm(15.0);
                 }
             }
-            // If useCurrentLocation is NOT true, GPS coords are stored on filter
-            // purely so toCard() can compute distance labels — no radius search.
+
         } else if (Boolean.TRUE.equals(filter.getUseCurrentLocation())) {
-            // User asked for "near me" but frontend didn't send GPS
             filter.setUserLatitude(request.getUserLatitude());
             filter.setUserLongitude(request.getUserLongitude());
         }
 
         int limit = resolveLimit(filter);
-
-        // Amenity list: Gemini list first, IntentDetector as fallback
         IntentDetector.Intent intent        = intentDetector.detect(prompt);
         String                detectedAmenity = intentDetector.extractAmenityKeyword(prompt);
         List<String>          amenityList   = filter.getAmenities();
@@ -89,33 +79,26 @@ public class AISearchServiceImpl implements AISearchService {
                 intent, hasGps, filter.getUseCurrentLocation(), filter.getDistanceKm(), limit, filter);
 
         List<Property> results = Collections.emptyList();
-
-        // ── 1. Distance / radius — only fires when user asked for "near me" ──
         if (filter.isDistanceSearch()) {
             results = tryDistanceSearch(filter, limit);
         }
 
-        // ── 2. Multi-amenity ──────────────────────────────────────────────────
         if (results.isEmpty() && amenityList != null && !amenityList.isEmpty()) {
             results = tryMultiAmenitySearch(filter, amenityList, limit);
         }
 
-        // ── 3. Multi-location ─────────────────────────────────────────────────
         if (results.isEmpty() && filter.isMultiLocation()) {
             results = tryMultiLocationSearch(filter, limit);
         }
 
-        // ── 4. Extended structured search ─────────────────────────────────────
         if (results.isEmpty()) {
             results = tryExtendedSearch(filter, limit);
         }
 
-        // ── 5. Hybrid vector + structured ─────────────────────────────────────
         if (results.isEmpty()) {
             results = tryHybridSearch(prompt, filter, limit);
         }
 
-        // ── 6. Deep full-text keyword ──────────────────────────────────────────
         if (results.isEmpty()) {
             results = tryKeywordDeepSearch(prompt, filter, limit);
         }
@@ -480,17 +463,6 @@ public class AISearchServiceImpl implements AISearchService {
         return true;
     }
 
-    /**
-     * BUG FIX: old code returned false when property listing_type was null.
-     * This excluded all legacy/unset properties from "owner only" searches AND
-     * also excluded them from unfiltered searches (when f.listingType IS null
-     * the guard already returns true first, so the real bug was the null check
-     * in the property side only when filter WAS set).
-     *
-     * Fix: if property has no listing_type set, treat it as "any" and include it
-     * unless the user specifically asked for "owner" (exclusive). This avoids
-     * hiding good properties that simply haven't been tagged yet.
-     */
     private boolean matchesListingType(Property p, AiFilter f) {
         if (f.getListingType() == null) return true;
         // Property has no listing type set → include it unless filter is very specific
@@ -645,12 +617,7 @@ public class AISearchServiceImpl implements AISearchService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Returns the next clean budget step above the given price.
-     * e.g. 5000000 (50L) → 7500000 (75L)
-     *      7500000 (75L) → 10000000 (1Cr)
-     *      13000000 (1.3Cr) → 15000000 (1.5Cr)
-     */
+
     private double nextCleanBudget(double current) {
         // Steps in INR: 25L, 50L, 75L, 1Cr, 1.25Cr, 1.5Cr, 2Cr, 2.5Cr, 3Cr, 4Cr, 5Cr, 7Cr, 10Cr
         double[] steps = {

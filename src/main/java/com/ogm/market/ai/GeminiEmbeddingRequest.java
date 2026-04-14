@@ -5,10 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- * Request body for the Gemini Embedding API.
- * Used by EmbeddingService to serialize POST body.
- */
+
 @Data
 public class GeminiEmbeddingRequest {
 

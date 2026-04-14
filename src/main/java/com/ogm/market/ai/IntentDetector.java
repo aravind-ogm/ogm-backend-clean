@@ -10,15 +10,13 @@ public class IntentDetector {
 
     public enum Intent {
         PROPERTY_SEARCH,
-        LOCATION_SEARCH,    // "near me", "nearby", "properties near my location"
-        AMENITY_SEARCH,     // "properties with swimming pool", "gym", "parking"
+        LOCATION_SEARCH,
+        AMENITY_SEARCH,
         FOLLOWUP_SEARCH,
-        ROUTE_QUERY,        // "distance between X and Y", "route from X to Y"
+        ROUTE_QUERY,
         GENERAL_CHAT
     }
 
-    // ─── Route / distance signals — checked FIRST ─────────────────────────────
-    // These must win over PROPERTY_SEARCH and LOCATION_SEARCH.
     private static final Pattern ROUTE_PATTERN = Pattern.compile(
             "(?i)(" +
                     // "distance between X and Y"
